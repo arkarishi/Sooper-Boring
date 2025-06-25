@@ -47,3 +47,9 @@ body, html, #root {
 .read-the-docs {
   color: #888;
 }
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1.5px solid rgba(180, 194, 255, 0.12);
+}
