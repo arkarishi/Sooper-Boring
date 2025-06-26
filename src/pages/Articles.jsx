@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export default function Articles() {
   const [articles, setArticles] = useState([]);
@@ -21,19 +22,31 @@ export default function Articles() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10">
       <h1 className="text-4xl font-extrabold text-blue-900 mb-10">Articles</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {articles.map((article) => (
-          <div
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+        {articles.map((article, i) => (
+          <motion.div
             key={article.id}
-            className="cursor-pointer group rounded-3xl bg-white shadow-lg hover:shadow-2xl transition p-6 flex flex-col md:flex-row items-stretch min-h-[260px]"
+            layout
+            whileHover={{
+              scale: 1.04,
+              y: -4,
+              boxShadow: "0 8px 36px rgba(0,0,0,0.13)",
+            }}
+            transition={{ type: "spring", stiffness: 280, damping: 22 }}
+            className="cursor-pointer rounded-3xl bg-white shadow-lg group flex flex-col h-full overflow-hidden border border-neutral-100 hover:border-blue-200 transition-all"
+            style={{
+              minHeight: "370px",
+              maxHeight: "480px",
+            }}
             onClick={() => navigate(`/articles/${article.id}`)}
           >
             <img
               src={article.image_url}
               alt={article.title}
-              className="w-full md:w-56 h-44 md:h-full object-cover rounded-2xl group-hover:scale-105 transition"
+              className="w-full h-52 object-cover object-center group-hover:scale-105 transition rounded-t-3xl"
+              style={{ background: "#f6f8fa" }}
             />
-            <div className="flex-1 md:pl-7 pt-4 md:pt-0 flex flex-col justify-between">
+            <div className="flex-1 flex flex-col justify-between p-5">
               <div>
                 <div className="mb-2 flex flex-wrap gap-2 items-center">
                   {article.category && (
@@ -47,7 +60,9 @@ export default function Articles() {
                     </span>
                   ))}
                 </div>
-                <h2 className="font-bold text-2xl text-gray-900 mb-1">{article.title}</h2>
+                <h2 className="font-bold text-xl text-gray-900 mb-1 group-hover:text-blue-700 transition">
+                  {article.title}
+                </h2>
                 <p className="text-gray-500 text-base line-clamp-3">{article.description}</p>
               </div>
               <div className="mt-4 text-xs text-gray-400">
@@ -59,7 +74,7 @@ export default function Articles() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

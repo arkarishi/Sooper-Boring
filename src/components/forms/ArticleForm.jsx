@@ -1,5 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabaseClient";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+
+// Toolbar Button Component
+function MenuBar({ editor }) {
+  if (!editor) return null;
+  return (
+    <div className="flex flex-wrap gap-2 border-b pb-2 mb-2">
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('bold') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+      >B</button>
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('italic') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+      ><span style={{ fontStyle: "italic" }}>I</span></button>
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('strike') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+      ><span style={{ textDecoration: "line-through" }}>S</span></button>
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+      >H1</button>
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+      >H2</button>
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('bulletList') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+      >• List</button>
+      <button
+        type="button"
+        className={`px-2 py-1 rounded ${editor.isActive('orderedList') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+      >1. List</button>
+      <button
+        type="button"
+        className="px-2 py-1 rounded hover:bg-gray-100"
+        onClick={() => editor.chain().focus().undo().run()}
+      >↶ Undo</button>
+      <button
+        type="button"
+        className="px-2 py-1 rounded hover:bg-gray-100"
+        onClick={() => editor.chain().focus().redo().run()}
+      >↷ Redo</button>
+    </div>
+  );
+}
 
 export default function ArticleForm() {
   const [formData, setFormData] = useState({
@@ -13,16 +69,30 @@ export default function ArticleForm() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Handle text inputs
+  // Tiptap editor with StarterKit
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: formData.body,
+    onUpdate: ({ editor }) => {
+      setFormData(prev => ({ ...prev, body: editor.getHTML() }));
+    },
+  });
+
+  useEffect(() => {
+    if (editor && formData.body !== editor.getHTML()) {
+      editor.commands.setContent(formData.body || "");
+    }
+  }, [editor, formData.body]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `${fileName}`;
@@ -43,7 +113,6 @@ export default function ArticleForm() {
     setUploading(false);
   };
 
-  // Submit article
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -74,6 +143,9 @@ export default function ArticleForm() {
       tags: "",
       image_url: "",
     });
+    if (editor) {
+      editor.commands.clearContent();
+    }
   };
 
   return (
@@ -97,15 +169,14 @@ export default function ArticleForm() {
         rows="2"
         required
       />
-      <textarea
-        name="body"
-        placeholder="Full Article Content"
-        value={formData.body}
-        onChange={handleChange}
-        className="w-full px-4 py-2 border rounded"
-        rows="8"
-        required
-      />
+
+      {/* Tiptap Editor with Toolbar */}
+      <label className="font-medium text-gray-700 mt-2 mb-1">Full Article Content</label>
+      <div className="bg-white border rounded shadow p-2 mb-6 min-h-[180px]">
+        <MenuBar editor={editor} />
+        <EditorContent editor={editor} />
+      </div>
+
       <input
         type="text"
         name="category"
