@@ -36,7 +36,6 @@ export default function ArticleDetail() {
         <ArrowLeft size={22} /> Back to Articles
       </button>
       <div className="max-w-5xl sm:max-w-6xl mx-auto bg-white p-0 sm:p-16 p-4 rounded-3xl shadow-2xl border border-neutral-200 transition-all duration-300">
-
         {/* Category on its own line */}
         {article.category && (
           <span className="inline-block bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded font-semibold uppercase tracking-wide mr-2 mb-1">
@@ -67,14 +66,17 @@ export default function ArticleDetail() {
           )}
         </div>
         <img
-          src={article.image_url}
+          src={article.image_url || "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image"}
           alt={article.title}
           className="rounded-2xl mb-10 w-full max-h-[600px] object-cover border"
         />
         <p className="text-xl text-gray-700 mb-8">{article.description}</p>
-        <div className="prose prose-xl text-gray-900 max-w-none">
-          {article.body ? article.body : <i>No detailed content provided.</i>}
-        </div>
+        <div
+          className="prose prose-xl text-gray-900 max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: article.body || "<i>No detailed content provided.</i>",
+          }}
+        />
       </div>
     </div>
   );

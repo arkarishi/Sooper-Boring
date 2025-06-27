@@ -3,56 +3,56 @@ import { supabase } from "../../utils/supabaseClient";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-// Toolbar Button Component
+// Modern, Aesthetic Toolbar
 function MenuBar({ editor }) {
   if (!editor) return null;
   return (
-    <div className="flex flex-wrap gap-2 border-b pb-2 mb-2">
+    <div className="flex flex-wrap gap-2 bg-white/80 rounded-t-md shadow-sm border-b px-2 py-1 mb-0">
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('bold') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('bold') ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleBold().run()}
       >B</button>
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('italic') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('italic') ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleItalic().run()}
       ><span style={{ fontStyle: "italic" }}>I</span></button>
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('strike') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('strike') ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleStrike().run()}
       ><span style={{ textDecoration: "line-through" }}>S</span></button>
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
       >H1</button>
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       >H2</button>
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('bulletList') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('bulletList') ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       >• List</button>
       <button
         type="button"
-        className={`px-2 py-1 rounded ${editor.isActive('orderedList') ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition ${editor.isActive('orderedList') ? 'bg-blue-200 text-blue-900 shadow-sm' : 'hover:bg-gray-100'}`}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       >1. List</button>
       <button
         type="button"
-        className="px-2 py-1 rounded hover:bg-gray-100"
+        className="px-2 py-1 rounded-md text-sm font-medium transition hover:bg-gray-100"
         onClick={() => editor.chain().focus().undo().run()}
-      >↶ Undo</button>
+      >↶</button>
       <button
         type="button"
-        className="px-2 py-1 rounded hover:bg-gray-100"
+        className="px-2 py-1 rounded-md text-sm font-medium transition hover:bg-gray-100"
         onClick={() => editor.chain().focus().redo().run()}
-      >↷ Redo</button>
+      >↷</button>
     </div>
   );
 }
@@ -69,7 +69,7 @@ export default function ArticleForm() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Tiptap editor with StarterKit
+  // Tiptap editor setup
   const editor = useEditor({
     extensions: [StarterKit],
     content: formData.body,
@@ -170,12 +170,15 @@ export default function ArticleForm() {
         required
       />
 
-      {/* Tiptap Editor with Toolbar */}
+      {/* ---- Modern Tiptap Editor ---- */}
       <label className="font-medium text-gray-700 mt-2 mb-1">Full Article Content</label>
-      <div className="bg-white border rounded shadow p-2 mb-6 min-h-[180px]">
+      <div className="rounded-md border focus-within:ring-2 focus-within:ring-blue-400 bg-neutral-50 min-h-[140px] text-gray-800 transition-shadow">
         <MenuBar editor={editor} />
-        <EditorContent editor={editor} />
+        <div className="px-3 pb-3 pt-2">
+          <EditorContent editor={editor} className="outline-none min-h-[90px] tiptap-content" />
+        </div>
       </div>
+      {/* --------------------------- */}
 
       <input
         type="text"

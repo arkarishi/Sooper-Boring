@@ -5,11 +5,13 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-  extend: {
-    maxWidth: {
-      'none': 'none',
+    extend: {
+      maxWidth: {
+        'none': 'none',
+      },
     },
   },
-},
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 };
