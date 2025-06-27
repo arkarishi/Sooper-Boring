@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Theories from "./pages/Theories";
 import Videos from "./pages/Videos";
+import VideoDetail from "./pages/VideoDetail"; // <-- import VideoDetail
 
 function App() {
   const [session, setSession] = useState(null);
@@ -50,6 +51,7 @@ function App() {
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/theories" element={<Theories />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path="/videos/:id" element={<VideoDetail />} /> {/* <-- add this */}
           </Routes>
         </main>
         <Footer />

@@ -1,175 +1,98 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import React, { useEffect, useState } from "react";
+import { supabase } from "../utils/supabaseClient";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
-const Videos = () => {
+// Helper: Detect YouTube link
+function isYouTube(url) {
+  return url && (url.includes("youtube.com") || url.includes("youtu.be"));
+}
+// Helper: Extract YouTube video ID
+function getYouTubeID(url) {
+  const regExp = /(?:youtube\.com\/.*v=|youtu\.be\/)([^&?/]+)/;
+  const match = url.match(regExp);
+  return match && match[1] ? match[1] : "";
+}
+
+export default function Videos() {
   const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState(null);
-  const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    video_url: ''
-  });
-  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const navigate = useNavigate();
 
-  // Auth session
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
-  }, []);
-
-  // Fetch videos
   useEffect(() => {
     fetchVideos();
   }, []);
 
   const fetchVideos = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from("videos")
+      .select("*")
+      .order("created_at", { ascending: false });
     setVideos(data || []);
-    setError(error ? error.message : null);
-    setLoading(false);
-  };
-
-  // Handle input changes
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // Handle thumbnail selection
-  const handleFileChange = (e) => {
-    setThumbnailFile(e.target.files[0]);
-  };
-
-  // Handle post video
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-
-    let thumbnail_url = null;
-
-    // 1. Upload thumbnail to Supabase Storage
-    if (thumbnailFile) {
-      const fileExt = thumbnailFile.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from('video-thumbnails')
-        .upload(fileName, thumbnailFile);
-
-      if (uploadError) {
-        setError('Thumbnail upload failed: ' + uploadError.message);
-        return;
-      }
-      const { data: publicData } = supabase.storage.from('video-thumbnails').getPublicUrl(fileName);
-      thumbnail_url = publicData.publicUrl; 
-    }
-
-    // 2. Insert video row
-    const { error: insertError } = await supabase.from('videos').insert([
-      { ...formData, thumbnail_url }
-    ]);
-
-    if (insertError) setError(insertError.message);
-    else {
-      setFormData({ title: '', description: '', video_url: '' });
-      setThumbnailFile(null);
-      fetchVideos();
-    }
   };
 
   return (
-    <div className="min-h-screen w-full px-6 py-10 bg-neutral-100">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-900">Videos</h1>
-
-      {/* Show form ONLY if logged in */}
-      {session && (
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-xl mx-auto mb-10 bg-white p-6 rounded-lg shadow"
-        >
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Post New Video</h2>
-          <input
-            type="text"
-            name="title"
-            placeholder="Title"
-            value={formData.title}
-            onChange={handleChange}
-            className="w-full mb-4 px-4 py-2 border rounded"
-            required
-          />
-          <textarea
-            name="description"
-            placeholder="Description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full mb-4 px-4 py-2 border rounded"
-            rows="3"
-            required
-          />
-          <input
-            type="text"
-            name="video_url"
-            placeholder="Video URL (YouTube, Vimeo, etc.)"
-            value={formData.video_url}
-            onChange={handleChange}
-            className="w-full mb-4 px-4 py-2 border rounded"
-            required
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="w-full mb-4"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+    <div className="min-h-screen bg-gray-50 px-4 py-10">
+      <h1 className="text-4xl font-extrabold text-blue-900 mb-10">Videos</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+        {videos.map((video) => (
+          <motion.div
+            key={video.id}
+            whileHover={{
+              scale: 1.035,
+              y: -3,
+              boxShadow: "0 10px 40px 0 rgba(0,0,0,0.11)",
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 24 }}
+            className="flex flex-col justify-between h-[340px] rounded-3xl bg-white shadow-lg overflow-hidden border border-neutral-100 hover:border-blue-300 transition-all cursor-pointer group"
+            onClick={() => navigate(`/videos/${video.id}`)}
           >
-            Post Video
-          </button>
-          {error && <p className="text-red-500 mt-2">{error}</p>}
-        </form>
-      )}
-
-      {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
-      ) : videos.length === 0 ? (
-        <p className="text-center text-gray-500">No videos found.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videos.map((video) => (
-            <div key={video.id} className="bg-white rounded-lg shadow p-4 flex flex-col">
-              <img
-                src={video.thumbnail_url}
-                alt={video.title}
-                className="mb-3 rounded aspect-video object-cover"
+            {/* Preview */}
+            {isYouTube(video.video_url) ? (
+              <div className="relative w-full h-40 rounded-t-3xl overflow-hidden flex-shrink-0">
+                <img
+                  src={`https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg`}
+                  alt="YouTube thumbnail"
+                  className="w-full h-full object-cover transition group-hover:scale-105 duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-white/80 rounded-full p-2 text-3xl text-blue-600 shadow-lg group-hover:scale-110 transition">
+                    ▶
+                  </span>
+                </div>
+              </div>
+            ) : video.video_url ? (
+              <video
+                src={video.video_url}
+                className="w-full h-40 object-cover rounded-t-3xl bg-black flex-shrink-0"
+                muted
+                preload="metadata"
+                controls={false}
               />
-              <h3 className="text-lg font-semibold mb-1">{video.title}</h3>
-              <p className="text-gray-600 mb-2">{video.description}</p>
-              <a
-                href={video.video_url}
-                className="text-blue-600 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Watch Video
-              </a>
+            ) : (
+              <div className="w-full h-40 bg-gray-200 rounded-t-3xl flex items-center justify-center text-4xl text-gray-400 flex-shrink-0">
+                <span>▶</span>
+              </div>
+            )}
+
+            {/* Info/content section */}
+            <div className="flex-1 flex flex-col p-4 md:p-5 min-h-0">
+              <h2 className="font-semibold text-[1.09rem] md:text-lg text-gray-900 mb-1 line-clamp-2 leading-snug">
+                {video.title}
+              </h2>
+              <p className="text-gray-500 text-[0.96rem] mb-0 line-clamp-2 leading-tight">
+                {video.description}
+              </p>
             </div>
-          ))}
-        </div>
-      )}
+
+            {/* Date/footer */}
+            <div className="border-t border-gray-100 px-5 pt-3 pb-3 min-h-[32px] flex items-center">
+              <span className="text-[13px] text-gray-400 tracking-wide">
+                {video.created_at && new Date(video.created_at).toLocaleDateString()}
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
-};
-
-export default Videos;
+}
