@@ -7,12 +7,14 @@ import { motion } from "framer-motion";
 function isYouTube(url) {
   return url && (url.includes("youtube.com") || url.includes("youtu.be"));
 }
-// Helper: Extract YouTube video ID
 function getYouTubeID(url) {
   const regExp = /(?:youtube\.com\/.*v=|youtu\.be\/)([^&?/]+)/;
   const match = url.match(regExp);
   return match && match[1] ? match[1] : "";
 }
+
+// Placeholder image for local videos
+const videoPlaceholder = "https://placehold.co/320x180/eeeeee/cccccc?text=No+Thumbnail";
 
 export default function Videos() {
   const [videos, setVideos] = useState([]);
@@ -31,67 +33,56 @@ export default function Videos() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-10">
-      <h1 className="text-4xl font-extrabold text-blue-900 mb-10">Videos</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
-        {videos.map((video) => (
-          <motion.div
-            key={video.id}
-            whileHover={{
-              scale: 1.035,
-              y: -3,
-              boxShadow: "0 10px 40px 0 rgba(0,0,0,0.11)",
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            className="flex flex-col justify-between h-[340px] rounded-3xl bg-white shadow-lg overflow-hidden border border-neutral-100 hover:border-blue-300 transition-all cursor-pointer group"
-            onClick={() => navigate(`/videos/${video.id}`)}
-          >
-            {/* Preview */}
-            {isYouTube(video.video_url) ? (
-              <div className="relative w-full h-40 rounded-t-3xl overflow-hidden flex-shrink-0">
-                <img
-                  src={`https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg`}
-                  alt="YouTube thumbnail"
-                  className="w-full h-full object-cover transition group-hover:scale-105 duration-300"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-white/80 rounded-full p-2 text-3xl text-blue-600 shadow-lg group-hover:scale-110 transition">
-                    ▶
-                  </span>
-                </div>
-              </div>
-            ) : video.video_url ? (
-              <video
-                src={video.video_url}
-                className="w-full h-40 object-cover rounded-t-3xl bg-black flex-shrink-0"
-                muted
-                preload="metadata"
-                controls={false}
-              />
-            ) : (
-              <div className="w-full h-40 bg-gray-200 rounded-t-3xl flex items-center justify-center text-4xl text-gray-400 flex-shrink-0">
-                <span>▶</span>
-              </div>
-            )}
+    <div className="min-h-screen bg-slate-50 pb-10" style={{ fontFamily: '"Newsreader", "Noto Sans", sans-serif' }}>
+      <div className="max-w-6xl mx-auto px-0 sm:px-4">
+        {/* Blue left headline */}
+        <h1 className="text-[2rem] font-extrabold text-blue-900 mb-8 mt-12 text-left">
+          Instructional Design Videos
+        </h1>
 
-            {/* Info/content section */}
-            <div className="flex-1 flex flex-col p-4 md:p-5 min-h-0">
-              <h2 className="font-semibold text-[1.09rem] md:text-lg text-gray-900 mb-1 line-clamp-2 leading-snug">
-                {video.title}
-              </h2>
-              <p className="text-gray-500 text-[0.96rem] mb-0 line-clamp-2 leading-tight">
-                {video.description}
-              </p>
-            </div>
-
-            {/* Date/footer */}
-            <div className="border-t border-gray-100 px-5 pt-3 pb-3 min-h-[32px] flex items-center">
-              <span className="text-[13px] text-gray-400 tracking-wide">
-                {video.created_at && new Date(video.created_at).toLocaleDateString()}
-              </span>
-            </div>
-          </motion.div>
-        ))}
+        <div className="flex flex-col gap-6">
+          {videos.map((video) => (
+            <motion.div
+              key={video.id}
+              whileHover={{ y: -2, boxShadow: "0 6px 24px 0 rgba(0,0,0,0.08)" }}
+              transition={{ type: "spring", stiffness: 160, damping: 22 }}
+              className="flex items-stretch justify-between gap-7 rounded-xl bg-white/95 border border-neutral-100 hover:border-blue-200 transition-all cursor-pointer p-6"
+              onClick={() => navigate(`/videos/${video.id}`)}
+              style={{ minHeight: 130 }}
+            >
+              {/* Left: Text */}
+              <div className="flex flex-col justify-center flex-[2.2_2.2_0px] min-w-0 pr-4">
+                <p className="text-[#0d141c] text-base font-bold leading-tight mb-1 truncate">{video.title}</p>
+                <p className="text-[#49719c] text-sm font-normal leading-normal mb-2 truncate">{video.description}</p>
+                <span className="text-xs text-gray-400 mt-2">
+                  {video.created_at && new Date(video.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              {/* Right: Thumbnail */}
+              <div
+                className="w-[260px] min-w-[210px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0 flex items-center justify-center"
+                style={{
+                  backgroundImage: isYouTube(video.video_url)
+                    ? `url(https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg)`
+                    : `url(${videoPlaceholder})`,
+                  height: 120,
+                  maxHeight: 130,
+                }}
+              >
+                {!isYouTube(video.video_url) && video.video_url && (
+                  <video
+                    src={video.video_url}
+                    className="w-full h-full object-cover rounded-xl bg-black"
+                    muted
+                    preload="metadata"
+                    controls={false}
+                    poster={videoPlaceholder}
+                  />
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -12,8 +12,9 @@ import ArticleDetail from "./pages/ArticleDetail";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Theories from "./pages/Theories";
+import TheoryDetail from "./pages/TheoryDetail"; // <-- Added
 import Videos from "./pages/Videos";
-import VideoDetail from "./pages/VideoDetail"; // <-- import VideoDetail
+import VideoDetail from "./pages/VideoDetail";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -50,8 +51,9 @@ function App() {
             />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/theories" element={<Theories />} />
+            <Route path="/theories/:id" element={<TheoryDetail />} /> {/* Added */}
             <Route path="/videos" element={<Videos />} />
-            <Route path="/videos/:id" element={<VideoDetail />} /> {/* <-- add this */}
+            <Route path="/videos/:id" element={<VideoDetail />} />
           </Routes>
         </main>
         <Footer />
