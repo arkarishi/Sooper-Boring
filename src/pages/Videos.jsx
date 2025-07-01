@@ -3,7 +3,7 @@ import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-// Helper: Detect YouTube link
+// Helpers for YouTube thumbnails
 function isYouTube(url) {
   return url && (url.includes("youtube.com") || url.includes("youtu.be"));
 }
@@ -13,33 +13,44 @@ function getYouTubeID(url) {
   return match && match[1] ? match[1] : "";
 }
 
-// Placeholder image for local videos
 const videoPlaceholder = "https://placehold.co/320x180/eeeeee/cccccc?text=No+Thumbnail";
 
 export default function Videos() {
   const [videos, setVideos] = useState([]);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchVideos();
-  }, []);
+  }, [search]);
 
   const fetchVideos = async () => {
-    const { data } = await supabase
+    let query = supabase
       .from("videos")
       .select("*")
       .order("created_at", { ascending: false });
+    if (search.trim()) {
+      query = query.ilike("title", `%${search}%`);
+    }
+    const { data } = await query;
     setVideos(data || []);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-10" style={{ fontFamily: '"Newsreader", "Noto Sans", sans-serif' }}>
       <div className="max-w-6xl mx-auto px-0 sm:px-4">
-        {/* Blue left headline */}
-        <h1 className="text-[2rem] font-extrabold text-blue-900 mb-8 mt-12 text-left">
-          Instructional Design Videos
-        </h1>
-
+        <div className="flex items-center mb-8 mt-12 gap-4">
+          <h1 className="text-[2rem] font-extrabold text-blue-900 flex-1 text-left">
+            Instructional Design Videos
+          </h1>
+          <input
+            type="text"
+            placeholder="Search videos…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
         <div className="flex flex-col gap-6">
           {videos.map((video) => (
             <motion.div

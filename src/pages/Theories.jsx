@@ -12,28 +12,40 @@ function getImageUrl(path) {
 
 export default function Theories() {
   const [theories, setTheories] = useState([]);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTheories();
-  }, []);
+  }, [search]);
 
   const fetchTheories = async () => {
-    const { data } = await supabase
+    let query = supabase
       .from("theories")
       .select("*")
       .order("created_at", { ascending: false });
+    if (search.trim()) {
+      query = query.ilike("title", `%${search}%`);
+    }
+    const { data } = await query;
     setTheories(data || []);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-10" style={{ fontFamily: '"Newsreader", "Noto Sans", sans-serif' }}>
       <div className="max-w-6xl mx-auto px-0 sm:px-4">
-        {/* Blue left headline */}
-        <h1 className="text-[2rem] font-extrabold text-blue-900 mb-8 mt-12 text-left">
-          Instructional Design Theories
-        </h1>
-
+        <div className="flex items-center mb-8 mt-12 gap-4">
+          <h1 className="text-[2rem] font-extrabold text-blue-900 flex-1 text-left">
+            Instructional Design Theories
+          </h1>
+          <input
+            type="text"
+            placeholder="Search theories…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
         <div className="flex flex-col gap-6">
           {theories.map((theory) => (
             <motion.div

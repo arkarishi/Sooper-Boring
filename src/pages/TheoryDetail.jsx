@@ -60,7 +60,7 @@ export default function TheoryDetail() {
         {Array.isArray(theory.principles) && theory.principles.length > 0 && (
             <div className="mb-6">
                 <div className="font-semibold text-blue-900 mb-2 bg-blue-100 px-2 py-1 rounded inline-block">Principles:</div>
-                <ul className="bg-blue-50 px-4 py-2 rounded-lg text-blue-900 mt-2">
+                <ul className="list-disc list-inside text-gray-700 mt-2">
                 {theory.principles.map((item, idx) => (
                     <li key={idx}>{item}</li>
                 ))}
@@ -70,7 +70,7 @@ export default function TheoryDetail() {
             {Array.isArray(theory.applications) && theory.applications.length > 0 && (
             <div className="mb-6">
                 <div className="font-semibold text-blue-900 mb-2 bg-blue-100 px-2 py-1 rounded inline-block">Applications:</div>
-                <ul className="bg-blue-50 px-4 py-2 rounded-lg text-blue-900 mt-2">
+                <ul className="list-disc list-inside text-gray-700 mt-2">
                 {theory.applications.map((item, idx) => (
                     <li key={idx}>{item}</li>
                 ))}
@@ -80,7 +80,7 @@ export default function TheoryDetail() {
             {Array.isArray(theory.examples) && theory.examples.length > 0 && (
             <div className="mb-6">
                 <div className="font-semibold text-blue-900 mb-2 bg-blue-100 px-2 py-1 rounded inline-block">Examples:</div>
-                <ul className="bg-blue-50 px-4 py-2 rounded-lg text-blue-900 mt-2">
+                <ul className="list-disc list-inside text-gray-700 mt-2">
                 {theory.examples.map((item, idx) => (
                     <li key={idx}>{item}</li>
                 ))}

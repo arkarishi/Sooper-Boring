@@ -11,8 +11,9 @@ import Articles from "./pages/Articles";
 import ArticleDetail from "./pages/ArticleDetail";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
+import JobDetail from "./pages/JobDetail"; // <-- Add this import
 import Theories from "./pages/Theories";
-import TheoryDetail from "./pages/TheoryDetail"; // <-- Added
+import TheoryDetail from "./pages/TheoryDetail";
 import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
 
@@ -50,8 +51,9 @@ function App() {
               }
             />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:id" element={<JobDetail />} /> {/* <-- Add this line */}
             <Route path="/theories" element={<Theories />} />
-            <Route path="/theories/:id" element={<TheoryDetail />} /> {/* Added */}
+            <Route path="/theories/:id" element={<TheoryDetail />} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/videos/:id" element={<VideoDetail />} />
           </Routes>
