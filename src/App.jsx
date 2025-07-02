@@ -19,6 +19,7 @@ import VideoDetail from "./pages/VideoDetail";
 
 function App() {
   const [session, setSession] = useState(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,7 +38,7 @@ function App() {
   return (
     <Router>
       <div className="w-screen min-h-screen flex flex-col w-full bg-neutral-50">
-        <Navbar session={session} />
+        <Navbar search={search} setSearch={setSearch} session={session} />
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -50,7 +51,7 @@ function App() {
                 session ? <Dashboard session={session} /> : <Navigate to="/auth" replace />
               }
             />
-            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs" element={<Jobs search={search} />} />
             <Route path="/jobs/:id" element={<JobDetail />} /> {/* <-- Add this line */}
             <Route path="/theories" element={<Theories />} />
             <Route path="/theories/:id" element={<TheoryDetail />} />

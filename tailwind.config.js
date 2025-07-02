@@ -9,6 +9,10 @@ module.exports = {
       maxWidth: {
         'none': 'none',
       },
+      fontFamily: {
+        serif: ['Newsreader', 'serif'],
+        sans: ['Inter', 'Noto Sans', 'sans-serif'],
+      },
     },
   },
   plugins: [

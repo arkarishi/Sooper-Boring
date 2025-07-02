@@ -11,9 +11,18 @@ const getImageUrl = (path) => {
   return data?.publicUrl || placeholderImg;
 };
 
-export default function Jobs() {
+function timeAgo(date) {
+  const now = new Date();
+  const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "today";
+  if (diff === 1) return "1 day ago";
+  if (diff < 30) return `${diff} days ago`;
+  const months = Math.floor(diff / 30);
+  return months === 1 ? "1 month ago" : `${months} months ago`;
+}
+
+export default function Jobs({ search }) {
   const [jobs, setJobs] = useState([]);
-  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,7 +31,7 @@ export default function Jobs() {
 
   const fetchJobs = async () => {
     let query = supabase.from("jobs").select("*").order("posted_at", { ascending: false });
-    if (search.trim()) {
+    if (search && search.trim()) {
       query = query.ilike("title", `%${search}%`);
     }
     const { data } = await query;
@@ -33,47 +42,48 @@ export default function Jobs() {
     <div className="min-h-screen bg-slate-50 pb-10" style={{ fontFamily: '"Newsreader", "Noto Sans", sans-serif' }}>
       <div className="max-w-6xl mx-auto px-0 sm:px-4">
         <div className="flex items-center mb-8 mt-12 gap-4">
-          <h1 className="text-[2rem] font-extrabold text-blue-900 flex-1 text-left">Instructional Design Jobs</h1>
-          <input
-            type="text"
-            placeholder="Search jobs…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <h1 className="text-[2rem] font-extrabold text-black flex-1 text-left">
+            Instructional Design Jobs
+          </h1>
         </div>
         <div className="flex flex-col gap-2">
           {jobs.map((job) => (
             <motion.div
               key={job.id}
-              whileHover={{ y: -2, backgroundColor: "#f1f5f9" }}
+              whileHover={{ backgroundColor: "#f6f6f6" }}
               transition={{ type: "spring", stiffness: 160, damping: 22 }}
-              className="flex items-stretch justify-between gap-7 cursor-pointer p-4 rounded-xl transition-all"
+              className="flex items-center justify-between gap-8 cursor-pointer px-0 py-3 transition-all"
               onClick={() => navigate(`/jobs/${job.id}`)}
-              style={{ minHeight: 130 }}
             >
-              {/* Left: Thumbnail */}
+              {/* Left: Logo */}
               <div
-                className="w-[120px] min-w-[100px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0 flex items-center justify-center"
+                className="w-16 h-16 min-w-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden bg-cover bg-center"
                 style={{
                   backgroundImage: `url(${getImageUrl(job.image_url)})`,
-                  height: 80,
-                  maxHeight: 100,
                 }}
               />
-              {/* Right: Text */}
-              <div className="flex flex-col justify-center flex-[2.2_2.2_0px] min-w-0 pr-4">
-                <p className="text-[#0d141c] text-base font-bold leading-tight mb-1 truncate">
+              {/* Middle: Job Info */}
+              <div className="flex flex-col justify-center min-w-0 flex-1 ml-2">
+                <span className="text-black text-base font-semibold font-serif leading-tight mb-0.5 truncate">
                   {job.title}
-                </p>
-                <p className="text-[#49719c] text-sm font-normal leading-normal mb-2 truncate">
-                  {job.company} — {job.location}
-                </p>
-                <p className="text-gray-600 text-sm truncate">{job.about}</p>
-                <span className="text-xs text-gray-400 mt-2">
-                  {job.posted_at && new Date(job.posted_at).toLocaleDateString()}
+                </span>
+                <span className="text-gray-500 text-sm mb-0.5">
+                  Posted {job.posted_at ? timeAgo(new Date(job.posted_at)) : ""}
+                </span>
+                <span className="text-gray-700 text-sm font-normal">
+                  {job.location}
                 </span>
               </div>
+              {/* Right: View Details Button */}
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  navigate(`/jobs/${job.id}`);
+                }}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full px-5 py-2 font-medium shadow-none border-none transition"
+              >
+                View Details
+              </button>
             </motion.div>
           ))}
         </div>
