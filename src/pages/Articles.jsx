@@ -36,7 +36,6 @@ export default function Articles() {
             className="px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
-
         <div className="flex flex-col gap-6">
           {articles.map((article) => (
             <motion.div
@@ -47,7 +46,16 @@ export default function Articles() {
               onClick={() => navigate(`/articles/${article.id}`)}
               style={{ minHeight: 130 }}
             >
-              {/* Left: Text */}
+              {/* Left: Thumbnail */}
+              <div
+                className="w-[260px] min-w-[210px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0 flex items-center justify-center"
+                style={{
+                  backgroundImage: `url(${article.image_url || placeholderImg})`,
+                  height: 120,
+                  maxHeight: 130,
+                }}
+              />
+              {/* Right: Text */}
               <div className="flex flex-col justify-center flex-[2.2_2.2_0px] min-w-0 pr-4">
                 <p className="text-[#0d141c] text-base font-bold leading-tight mb-1 truncate">
                   {article.title}
@@ -59,15 +67,6 @@ export default function Articles() {
                   {article.created_at && new Date(article.created_at).toLocaleDateString()}
                 </span>
               </div>
-              {/* Right: Thumbnail */}
-              <div
-                className="w-[260px] min-w-[210px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0 flex items-center justify-center"
-                style={{
-                  backgroundImage: `url(${article.image_url || placeholderImg})`,
-                  height: 120,
-                  maxHeight: 130,
-                }}
-              />
             </motion.div>
           ))}
         </div>
