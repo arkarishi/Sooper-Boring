@@ -36,12 +36,12 @@ export default function Navbar({ search, setSearch }) {
           Sooper Boring
         </Link>
         <div className="flex gap-6 ml-4 font-serif text-base font-medium">
-          <Link to="/articles" className="text-gray-700 hover:text-blue-600">Articles</Link>
-          <Link to="/theories" className="text-gray-700 hover:text-blue-600">Theories</Link>
-          <Link to="/videos" className="text-gray-700 hover:text-blue-600">Videos</Link>
-          <Link to="/jobs" className="text-gray-700 hover:text-blue-600">Jobs</Link>
+          <Link to="/articles" className="text-black hover:text-blue-600">Articles</Link>
+          <Link to="/theories" className="text-black hover:text-blue-600">Theories</Link>
+          <Link to="/videos" className="text-black hover:text-blue-600">Videos</Link>
+          <Link to="/jobs" className="text-black hover:text-blue-600">Jobs</Link>
           {user && (
-            <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</Link>
+            <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
           )}
         </div>
       </div>
