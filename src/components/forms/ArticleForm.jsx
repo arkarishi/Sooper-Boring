@@ -84,6 +84,9 @@ export default function ArticleForm() {
     }
   }, [editor, formData.body]);
 
+  const inputClass =
+    "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600";
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -149,7 +152,7 @@ export default function ArticleForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4 max-w-lg mx-auto">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Post New Article</h2>
       <input
         type="text"
@@ -157,7 +160,7 @@ export default function ArticleForm() {
         placeholder="Title"
         value={formData.title}
         onChange={handleChange}
-        className="w-full px-4 py-2 border rounded"
+        className={inputClass}
         required
       />
       <textarea
@@ -165,12 +168,11 @@ export default function ArticleForm() {
         placeholder="Short Description (for previews)"
         value={formData.description}
         onChange={handleChange}
-        className="w-full px-4 py-2 border rounded"
+        className={inputClass}
         rows="2"
         required
       />
 
-      {/* ---- Modern Tiptap Editor ---- */}
       <label className="font-medium text-gray-700 mt-2 mb-1">Full Article Content</label>
       <div className="rounded-md border focus-within:ring-2 focus-within:ring-blue-400 bg-neutral-50 min-h-[140px] text-gray-800 transition-shadow">
         <MenuBar editor={editor} />
@@ -178,7 +180,6 @@ export default function ArticleForm() {
           <EditorContent editor={editor} className="outline-none min-h-[90px] tiptap-content" />
         </div>
       </div>
-      {/* --------------------------- */}
 
       <input
         type="text"
@@ -186,7 +187,7 @@ export default function ArticleForm() {
         placeholder="Category (e.g. Design, Learning)"
         value={formData.category}
         onChange={handleChange}
-        className="w-full px-4 py-2 border rounded"
+        className={inputClass}
       />
       <input
         type="text"
@@ -194,15 +195,15 @@ export default function ArticleForm() {
         placeholder="Tags (comma separated, e.g. theory, ux, edtech)"
         value={formData.tags}
         onChange={handleChange}
-        className="w-full px-4 py-2 border rounded"
+        className={inputClass}
       />
       <div>
-        <label className="block mb-1 font-medium">Upload Image</label>
+        <label className="block font-medium text-gray-700 mb-1">Upload Image</label>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageUpload}
-          className="w-full text-sm"
+          className={inputClass}
           disabled={uploading}
         />
         {uploading && <div className="text-blue-600 mt-1 text-sm">Uploading...</div>}

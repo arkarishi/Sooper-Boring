@@ -14,6 +14,10 @@ export default function TheoryForm() {
   });
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const inputClass =
+    "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3";
 
   const handleChange = (e) => {
     setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -23,6 +27,7 @@ export default function TheoryForm() {
     const file = e.target.files[0];
     setImageFile(file);
     if (!file) return;
+    setUploading(true);
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
@@ -30,9 +35,11 @@ export default function TheoryForm() {
       .upload(fileName, file);
     if (uploadError) {
       setError(uploadError.message);
+      setUploading(false);
       return;
     }
     setFormData((prev) => ({ ...prev, image_url: fileName }));
+    setUploading(false);
   };
 
   const handleSubmit = async (e) => {
@@ -64,7 +71,7 @@ export default function TheoryForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-2 max-w-lg mx-auto">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Post a New Theory</h2>
       <input
         type="text"
@@ -72,7 +79,7 @@ export default function TheoryForm() {
         placeholder="Theory Title"
         value={formData.title}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className={inputClass}
         required
       />
       <input
@@ -81,14 +88,14 @@ export default function TheoryForm() {
         placeholder="Subtitle (optional)"
         value={formData.subtitle}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className={inputClass}
       />
       <textarea
         name="intro"
         placeholder="Short Introduction / Summary"
         value={formData.intro}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className={inputClass}
         required
         rows={2}
       />
@@ -97,7 +104,7 @@ export default function TheoryForm() {
         placeholder="Principles (one per line)"
         value={formData.principles}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className={inputClass}
         rows={2}
       />
       <textarea
@@ -105,7 +112,7 @@ export default function TheoryForm() {
         placeholder="Applications (one per line)"
         value={formData.applications}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className={inputClass}
         rows={2}
       />
       <textarea
@@ -113,16 +120,32 @@ export default function TheoryForm() {
         placeholder="Examples (one per line)"
         value={formData.examples}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className={inputClass}
         rows={2}
       />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        className="w-full mb-3"
-      />
-      <button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded">
+      <div>
+        <label className="block font-medium text-gray-700 mb-1">Upload Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className={inputClass}
+          disabled={uploading}
+        />
+        {uploading && <div className="text-blue-600 mt-1 text-sm">Uploading...</div>}
+        {formData.image_url && (
+          <img
+            src={supabase.storage.from("theory-images").getPublicUrl(formData.image_url).data.publicUrl}
+            alt="Preview"
+            className="h-24 rounded mt-2 border bg-white object-contain"
+          />
+        )}
+      </div>
+      <button
+        type="submit"
+        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded"
+        disabled={uploading}
+      >
         Post Theory
       </button>
       {error && <p className="text-red-500 mt-2">{error}</p>}

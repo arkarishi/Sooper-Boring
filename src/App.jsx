@@ -43,7 +43,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/articles" element={<Articles />} />
+            <Route path="/articles" element={<Articles search={search}i />} />
             <Route path="/articles/:id" element={<ArticleDetail />} />
             <Route
               path="/dashboard"
@@ -53,9 +53,9 @@ function App() {
             />
             <Route path="/jobs" element={<Jobs search={search} />} />
             <Route path="/jobs/:id" element={<JobDetail />} /> {/* <-- Add this line */}
-            <Route path="/theories" element={<Theories />} />
+            <Route path="/theories" element={<Theories search={search} />} />
             <Route path="/theories/:id" element={<TheoryDetail />} />
-            <Route path="/videos" element={<Videos />} />
+            <Route path="/videos" element={<Videos search={search} />} />
             <Route path="/videos/:id" element={<VideoDetail />} />
           </Routes>
         </main>

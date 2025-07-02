@@ -64,7 +64,7 @@ export default function JobForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4 max-w-lg mx-auto">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Post a New Job</h2>
       <input
         type="text"
@@ -72,7 +72,7 @@ export default function JobForm() {
         placeholder="Job Title"
         value={formData.title}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         required
       />
       <input
@@ -81,7 +81,7 @@ export default function JobForm() {
         placeholder="Company"
         value={formData.company}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         required
       />
       <input
@@ -90,21 +90,31 @@ export default function JobForm() {
         placeholder="Location"
         value={formData.location}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         required
       />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleLogoUpload}
-        className="w-full mb-3"
-      />
+      <div>
+        <label className="block font-medium text-gray-700 mb-1">Upload Company Logo</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+          className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+        />
+        {formData.image_url && (
+          <img
+            src={supabase.storage.from("job-images").getPublicUrl(formData.image_url).data.publicUrl}
+            alt="Logo Preview"
+            className="h-20 rounded mt-2 border bg-white object-contain"
+          />
+        )}
+      </div>
       <textarea
         name="about"
         placeholder="About the job"
         value={formData.about}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         required
         rows={2}
       />
@@ -113,7 +123,7 @@ export default function JobForm() {
         placeholder="Responsibilities (one per line)"
         value={formData.responsibilities.join('\n')}
         onChange={(e) => handleArrayChange('responsibilities', e.target.value)}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         rows={2}
         required
       />
@@ -122,7 +132,7 @@ export default function JobForm() {
         placeholder="Qualifications (one per line)"
         value={formData.qualifications.join('\n')}
         onChange={(e) => handleArrayChange('qualifications', e.target.value)}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         rows={2}
         required
       />
@@ -131,7 +141,7 @@ export default function JobForm() {
         placeholder="How to apply"
         value={formData.how_to_apply}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         required
         rows={2}
       />
@@ -141,10 +151,10 @@ export default function JobForm() {
         placeholder="Application Link or Email"
         value={formData.apply_url}
         onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
+        className="w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
         required
       />
-      <button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded">
+      <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
         Post Job
       </button>
       {error && <p className="text-red-500 mt-2">{error}</p>}

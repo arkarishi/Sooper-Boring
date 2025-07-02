@@ -8,12 +8,12 @@ export default function VideoForm() {
     video_url: "",
   });
   const [videoFile, setVideoFile] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploadType, setUploadType] = useState("file"); // "file" or "link"
 
-  // Use same input style as ArticleForm!
   const inputClass =
     "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600";
 
@@ -31,19 +31,25 @@ export default function VideoForm() {
     }
   };
 
+  const handleThumbnailChange = (e) => {
+    setThumbnailFile(e.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     let video_url = formData.video_url;
+    let thumbnail_url = null;
 
-    // If local file, upload to Supabase Storage
+    // If local file, upload video and thumbnail to Supabase Storage
     if (uploadType === "file" && videoFile) {
+      // Upload video
       const fileExt = videoFile.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
-        .from("video-thumbnails")
+        .from("videos")
         .upload(fileName, videoFile);
 
       if (uploadError) {
@@ -52,14 +58,30 @@ export default function VideoForm() {
         return;
       }
       const { data: publicData } = supabase.storage
-        .from("video-thumbnails")
+        .from("videos")
         .getPublicUrl(fileName);
       video_url = publicData.publicUrl;
+
+      // Upload thumbnail if provided
+      if (thumbnailFile) {
+        const thumbExt = thumbnailFile.name.split(".").pop();
+        const thumbName = `${Date.now()}-thumb-${Math.random()}.${thumbExt}`;
+        const { error: thumbError } = await supabase.storage
+          .from("video-thumbnails")
+          .upload(thumbName, thumbnailFile);
+
+        if (thumbError) {
+          setError("Thumbnail upload failed: " + thumbError.message);
+          setLoading(false);
+          return;
+        }
+        thumbnail_url = thumbName;
+      }
     }
 
     // Insert video row
     const { error: insertError } = await supabase.from("videos").insert([
-      { ...formData, video_url }
+      { ...formData, video_url, thumbnail_url }
     ]);
 
     setLoading(false);
@@ -68,6 +90,7 @@ export default function VideoForm() {
     else {
       setFormData({ title: "", description: "", video_url: "" });
       setVideoFile(null);
+      setThumbnailFile(null);
       setVideoPreview(null);
     }
   };
@@ -108,7 +131,7 @@ export default function VideoForm() {
         required
       />
 
-      {/* Conditionally render video input */}
+      {/* Conditionally render video and thumbnail input */}
       {uploadType === "file" ? (
         <div>
           <input
@@ -127,6 +150,17 @@ export default function VideoForm() {
               className="w-32 h-32 object-cover mt-2 rounded shadow"
             />
           )}
+          {/* Thumbnail input */}
+          <div className="mt-4">
+            <label className="block font-medium text-gray-700 mb-1">Thumbnail Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
+              className={inputClass}
+              required
+            />
+          </div>
         </div>
       ) : (
         <input

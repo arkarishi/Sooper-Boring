@@ -11,7 +11,7 @@ module.exports = {
       },
       fontFamily: {
         serif: ['Newsreader', 'serif'],
-        sans: ['Inter', 'Noto Sans', 'sans-serif'],
+        sans: ['Noto Sans', 'Inter', 'sans-serif'],
       },
     },
   },
