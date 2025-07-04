@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../utils/supabaseClient";
-import { ArrowLeft } from "lucide-react";
 
 export default function VideoDetail() {
   const { id } = useParams();
@@ -32,21 +31,29 @@ export default function VideoDetail() {
     url && (url.includes("youtube.com") || url.includes("youtu.be"));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-14 px-2 sm:px-4">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-8 flex items-center gap-2 text-blue-700 hover:underline"
-      >
-        <ArrowLeft size={22} /> Back to Videos
-      </button>
-      <div className="max-w-5xl sm:max-w-6xl mx-auto bg-white p-0 sm:p-16 p-4 rounded-3xl shadow-2xl border border-neutral-200 transition-all duration-300">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-6">{video.title}</h1>
-        <div className="mb-6 text-gray-400 text-base">
+    <div className="min-h-screen bg-slate-50 py-10" style={{ fontFamily: 'Newsreader, "Noto Sans", sans-serif' }}>
+      <div className="max-w-5xl mx-auto px-4">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 mb-2">
+          <span
+            className="text-[#49719c] text-base font-medium leading-normal cursor-pointer hover:underline"
+            onClick={() => navigate("/videos")}
+          >
+            Videos
+          </span>
+          <span className="text-[#49719c] text-base font-medium leading-normal">/</span>
+        </div>
+        {/* Title */}
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d141c] leading-tight mb-2">
+          {video.title}
+        </h1>
+        {/* Date */}
+        <div className="mb-6 text-[#49719c] text-sm">
           {video.created_at && (
-            <>{new Date(video.created_at).toLocaleDateString()}</>
+            <>Published on {new Date(video.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
           )}
         </div>
-        {/* Video player logic */}
+        {/* Video player */}
         <div className="w-full mb-8">
           {isYouTube(video.video_url) ? (
             <iframe
@@ -66,7 +73,8 @@ export default function VideoDetail() {
             </video>
           )}
         </div>
-        <p className="text-xl text-gray-700 mb-8">{video.description}</p>
+        {/* Description */}
+        <p className="text-lg text-gray-700 mb-8">{video.description}</p>
       </div>
     </div>
   );
