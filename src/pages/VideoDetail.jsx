@@ -47,8 +47,9 @@ export default function VideoDetail() {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d141c] leading-tight mb-2">
           {video.title}
         </h1>
-        {/* Date */}
+        {/* Author and Date */}
         <div className="mb-6 text-[#49719c] text-sm">
+          {video.author && <>By {video.author} · </>}
           {video.created_at && (
             <>Published on {new Date(video.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
           )}
@@ -73,8 +74,26 @@ export default function VideoDetail() {
             </video>
           )}
         </div>
-        {/* Description */}
-        <p className="text-lg text-gray-700 mb-8">{video.description}</p>
+        {/* Description (render HTML) */}
+        <div
+          className="prose prose-lg text-gray-700 mb-8"
+          dangerouslySetInnerHTML={{ __html: video.description || "" }}
+        />
+        {/* Category & Tags at the bottom */}
+        <div className="flex flex-wrap gap-2 mt-10">
+          {video.category && (
+            <span className="inline-block bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded font-semibold uppercase tracking-wide">
+              {video.category}
+            </span>
+          )}
+          {Array.isArray(video.tags) && video.tags.length > 0 && (
+            video.tags.map(tag => (
+              <span key={tag} className="inline-block bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded">
+                #{tag}
+              </span>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
