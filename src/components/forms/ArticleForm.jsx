@@ -127,10 +127,12 @@ export default function ArticleForm() {
       ? formData.tags.split(",").map(tag => tag.trim()).filter(Boolean)
       : [];
 
+    // Get user (Supabase v2+)
+    const { data: { user } } = await supabase.auth.getUser();
+
     const payload = {
-      title: formData.title,
-      description: formData.description,
-      body: formData.body,
+      ...formData,
+      author: user?.user_metadata?.full_name || user?.email || "Anonymous",
       category: formData.category || null,
       tags: tagsArray.length > 0 ? tagsArray : null,
       image_url: formData.image_url,
