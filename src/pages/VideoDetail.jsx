@@ -74,10 +74,16 @@ export default function VideoDetail() {
             </video>
           )}
         </div>
-        {/* Description (render HTML) */}
+        {/* Description (short summary) */}
+        {video.description && (
+          <p className="text-[#0d141c] text-base font-normal leading-normal pb-3 pt-1">
+            {video.description}
+          </p>
+        )}
+        {/* Body (full content, rich HTML) */}
         <div
           className="prose prose-lg text-gray-700 mb-8"
-          dangerouslySetInnerHTML={{ __html: video.description || "" }}
+          dangerouslySetInnerHTML={{ __html: video.body || "<i>No detailed content provided.</i>" }}
         />
         {/* Category & Tags at the bottom */}
         <div className="flex flex-wrap gap-2 mt-10">
