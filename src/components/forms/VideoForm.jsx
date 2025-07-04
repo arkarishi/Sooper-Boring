@@ -62,6 +62,7 @@ export default function VideoForm() {
     title: "",
     video_url: "",
     description: "",
+    body: "",
     category: "",
     tags: "",
   });
@@ -72,20 +73,20 @@ export default function VideoForm() {
   const [loading, setLoading] = useState(false);
   const [uploadType, setUploadType] = useState("file"); // "file" or "link"
 
-  // Tiptap editor setup for video description
+  // TipTap editor for body (full content)
   const editor = useEditor({
     extensions: [StarterKit],
-    content: formData.description,
+    content: formData.body,
     onUpdate: ({ editor }) => {
-      setFormData(prev => ({ ...prev, description: editor.getHTML() }));
+      setFormData(prev => ({ ...prev, body: editor.getHTML() }));
     },
   });
 
   useEffect(() => {
-    if (editor && formData.description !== editor.getHTML()) {
-      editor.commands.setContent(formData.description || "");
+    if (editor && formData.body !== editor.getHTML()) {
+      editor.commands.setContent(formData.body || "");
     }
-  }, [editor, formData.description]);
+  }, [editor, formData.body]);
 
   const inputClass =
     "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600";
@@ -170,6 +171,7 @@ export default function VideoForm() {
         category: formData.category || null,
         tags: tagsArray.length > 0 ? tagsArray : null,
         description: formData.description,
+        body: formData.body,
       }
     ]);
 
@@ -177,7 +179,7 @@ export default function VideoForm() {
 
     if (insertError) setError(insertError.message);
     else {
-      setFormData({ title: "", video_url: "", description: "", category: "", tags: "" });
+      setFormData({ title: "", video_url: "", description: "", body: "", category: "", tags: "" });
       setVideoFile(null);
       setThumbnailFile(null);
       setVideoPreview(null);
@@ -212,8 +214,17 @@ export default function VideoForm() {
         required
       />
 
-      {/* Rich text editor for description/body */}
-      <label className="font-medium text-gray-700 mt-2 mb-1">Video Description</label>
+      <textarea
+        name="description"
+        placeholder="Short Description (for previews)"
+        value={formData.description}
+        onChange={handleChange}
+        className={inputClass}
+        rows={2}
+        required
+      />
+
+      <label className="font-medium text-gray-700 mt-2 mb-1">Full Video Content</label>
       <div className="rounded-md border focus-within:ring-2 focus-within:ring-blue-400 bg-neutral-50 min-h-[140px] text-gray-800 transition-shadow">
         <MenuBar editor={editor} />
         <div className="px-3 pb-3 pt-2">

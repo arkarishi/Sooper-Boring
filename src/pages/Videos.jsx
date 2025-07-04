@@ -55,7 +55,20 @@ export default function Videos({ search }) {
               className="flex items-stretch gap-8 cursor-pointer px-0 py-3 transition-all"
               onClick={() => navigate(`/videos/${video.id}`)}
             >
-              {/* Left: Thumbnail */}
+              {/* Left: Text */}
+              <div className="flex flex-col justify-center flex-1 min-w-0">
+                <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif truncate">
+                  {video.title}
+                </p>
+                <div
+                  className="text-[#49719c] text-base font-normal leading-normal mb-1 truncate prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: video.description || "" }}
+                />
+                <span className="text-xs text-gray-400 mt-2">
+                  {video.created_at && new Date(video.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              {/* Right: Thumbnail */}
               {isYouTube(video.video_url) ? (
                 <img
                   src={`https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg`}
@@ -69,18 +82,6 @@ export default function Videos({ search }) {
                   className="w-[260px] min-w-[210px] h-[160px] max-h-[180px] rounded-xl object-cover flex-shrink-0"
                 />
               )}
-              {/* Right: Text */}
-              <div className="flex flex-col justify-center flex-1 min-w-0">
-                <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif truncate">
-                  {video.title}
-                </p>
-                <p className="text-[#49719c] text-base font-normal leading-normal mb-1 truncate">
-                  {video.description}
-                </p>
-                <span className="text-xs text-gray-400 mt-2">
-                  {video.created_at && new Date(video.created_at).toLocaleDateString()}
-                </span>
-              </div>
             </motion.div>
           ))}
         </div>
