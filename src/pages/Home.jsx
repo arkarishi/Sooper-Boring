@@ -195,7 +195,7 @@ function SectionCards({ title, items }) {
               }}
             />
             <div className="p-4 flex flex-col flex-1">
-              <h3 className="text-lg font-bold text-gray-800 mb-1 line-clamp-2">
+              <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">
                 {item.title}
               </h3>
               {item.company && (
@@ -204,7 +204,7 @@ function SectionCards({ title, items }) {
                   {item.location && <> · {item.location}</>}
                 </div>
               )}
-              <p className="text-sm text-gray-500 line-clamp-4">
+              <p className="text-sm text-gray-500 line-clamp-2">
                 {item.desc}
               </p>
             </div>
@@ -215,23 +215,24 @@ function SectionCards({ title, items }) {
   );
 }
 
-// Designer Spotlights - Circular cards (unchanged)
+// Designer Spotlights - Circular cards (modified)
 function SpotlightsSection({ items }) {
   return (
     <div className="w-full max-w-5xl mt-12">
       <h2 className="text-2xl font-bold text-gray-900 mb-4 px-2">Instructional Designers Spotlight</h2>
-      <div className="flex gap-8 overflow-x-auto px-2 pb-2 hide-scrollbar">
+      <div className="flex gap-10 overflow-x-auto px-2 pb-2 hide-scrollbar">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center min-w-[170px] max-w-[180px] bg-white rounded-xl shadow px-4 py-5"
+            className="flex flex-col items-center"
+            style={{ minWidth: 200, maxWidth: 220 }}
           >
             <div
-              className="w-24 h-24 rounded-full bg-center bg-cover mb-3"
+              className="w-40 h-40 rounded-full bg-center bg-cover mb-4 shadow-lg border-4 border-white"
               style={{ backgroundImage: `url(${item.image})` }}
             />
-            <h3 className="text-base font-semibold text-gray-800">{item.title}</h3>
-            <p className="text-xs text-gray-500 text-center">{item.desc}</p>
+            <h3 className="text-lg font-semibold text-gray-800 text-center">{item.title}</h3>
+            <p className="text-sm text-gray-500 text-center">{item.desc}</p>
           </div>
         ))}
       </div>
