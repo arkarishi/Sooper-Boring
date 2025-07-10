@@ -184,7 +184,7 @@ function SectionCards({ title, items }) {
           <Link
             key={idx}
             to={item.link}
-            className="min-w-[300px] max-w-[340px] bg-white rounded-xl shadow flex flex-col hover:scale-105 transition-transform"
+            className="w-[320px] flex-shrink-0 bg-white rounded-xl shadow flex flex-col hover:scale-105 transition-transform"
             style={{ maxHeight: 340 }}
           >
             <div
@@ -195,15 +195,18 @@ function SectionCards({ title, items }) {
               }}
             />
             <div className="p-4 flex flex-col flex-1">
+              {/* Title: always 1 line */}
               <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">
                 {item.title}
               </h3>
+              {/* Company and location: always 1 line, only for jobs */}
               {item.company && (
-                <div className="text-xs text-gray-500 mb-1">
+                <div className="text-xs text-gray-500 mb-1 truncate">
                   {item.company}
                   {item.location && <> · {item.location}</>}
                 </div>
               )}
+              {/* Description: always 2 lines */}
               <p className="text-sm text-gray-500 line-clamp-2">
                 {item.desc}
               </p>
