@@ -52,6 +52,20 @@ export default function Home() {
       desc: "An experienced e-learning developer and learning experience designer.",
       link: "#",
     },
+    {
+      image:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuCcSSKY-mCERXHqYf-_lSBq20UfwAur5qKHnXQ1_18q1Pp1OG8YoZphLoDa6y4772TUDGsTn3nvULB16-Yfmo9gso3E2cWt3zC9WSobsSS-tNWBghmUjZxIwvIOO76D1c3mOXeUg8nOJPd7-tsUf6qYjUA3z-4Z26BN5e0hVRxCPJvoXr_UxNM8m3arw1qG64lljXxjYg3riB0NleM88x3WAVKzix1smOOkFBuPHPv2bIXtURVrGuuIyQLQUNJwD345OeyOg0QBNQ",
+      title: "Olivia Bennett",
+      desc: "A renowned instructional designer specializing in corporate training.",
+      link: "#",
+    },
+    {
+      image:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuBBnRaDmpfQsAbVmi2w4sHE6g0RWLjc4TUU4w8fMTj-I51H3zx44GlXVczJmc8QJvrgjE2I2M987hvFKb1EEsZdEzZhbdgJeEp0kx5RmSLr4ggcjlj7j-UHKDnGP_rIMwUhwNTGkR_RtD5788EW8mDPkCPlaPSEh2ktEdz0-jTAvLSH_KXFEeLcvKgPMOiLFS_fTYpruFRcykDughHJuGqVKYs0y8I6Tp-wIQ_M4gg7Xu0ATF3obDdu7zEZif9OHAiD18VTHqXYdA",
+      title: "Owen Carter",
+      desc: "A creative instructional designer with a focus on gamification.",
+      link: "#",
+    },
   ]);
 
   useEffect(() => {
