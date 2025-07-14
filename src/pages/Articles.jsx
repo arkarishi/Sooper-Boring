@@ -63,7 +63,9 @@ export default function Articles({ search }) {
                   {article.description}
                 </p>
                 <span className="text-xs text-gray-400 mt-2">
-                  {article.created_at && new Date(article.created_at).toLocaleDateString()}
+                  {article.created_at && (
+                    <>Published on {new Date(article.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
+                  )}
                 </span>
               </div>
             </motion.div>

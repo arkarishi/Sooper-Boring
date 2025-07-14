@@ -30,7 +30,7 @@ export default function ArticleDetail() {
     <div className="min-h-screen bg-slate-50 py-10" style={{ fontFamily: 'Newsreader, "Noto Sans", sans-serif' }}>
       <div className="max-w-6xl mx-auto px-4">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 mb-4 px-2">
           <span
             className="text-[#49719c] text-base font-medium leading-normal cursor-pointer hover:underline"
             onClick={() => navigate("/articles")}
@@ -38,11 +38,18 @@ export default function ArticleDetail() {
             Articles
           </span>
           <span className="text-[#49719c] text-base font-medium leading-normal">/</span>
+          <span className="text-[#141414] text-base font-medium leading-normal">{article.title}</span>
         </div>
         {/* Title */}
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d141c] leading-tight mb-2">
           {article.title}
         </h1>
+        {/* Description */}
+        {article.description && (
+          <p className="text-[#0d141c] text-base font-normal leading-normal pb-3 pt-1">
+            {article.description}
+          </p>
+        )}
         {/* Author and Date */}
         <div className="mb-6 text-[#49719c] text-sm">
           {article.author && <>By {article.author} · </>}
@@ -60,12 +67,6 @@ export default function ArticleDetail() {
               style={{ background: "#f5f7fa" }}
             />
           </div>
-        )}
-        {/* Description */}
-        {article.description && (
-          <p className="text-[#0d141c] text-base font-normal leading-normal pb-3 pt-1">
-            {article.description}
-          </p>
         )}
         {/* Body */}
         <div

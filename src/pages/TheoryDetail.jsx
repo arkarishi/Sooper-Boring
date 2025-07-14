@@ -62,7 +62,7 @@ export default function TheoryDetail() {
         {/* Date */}
         <div className="mb-6 text-gray-400 text-base px-4">
           {theory.created_at && (
-            <>{new Date(theory.created_at).toLocaleDateString()}</>
+            <>Published on {new Date(theory.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
           )}
         </div>
         {/* Intro/Description */}

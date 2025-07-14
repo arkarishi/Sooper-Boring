@@ -65,7 +65,9 @@ export default function Videos({ search }) {
                   dangerouslySetInnerHTML={{ __html: video.description || "" }}
                 />
                 <span className="text-xs text-gray-400 mt-2">
-                  {video.created_at && new Date(video.created_at).toLocaleDateString()}
+                  {video.created_at && (
+                    <>Published on {new Date(video.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
+                  )}
                 </span>
               </div>
               {/* Right: Thumbnail */}

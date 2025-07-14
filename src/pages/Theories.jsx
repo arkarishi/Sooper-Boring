@@ -65,7 +65,9 @@ export default function Theories({ search }) {
                   </p>
                 )}
                 <span className="text-xs text-gray-400 mt-2">
-                  {theory.created_at && new Date(theory.created_at).toLocaleDateString()}
+                  {theory.created_at && (
+                    <>Published on {new Date(theory.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
+                  )}
                 </span>
               </div>
             </motion.div>

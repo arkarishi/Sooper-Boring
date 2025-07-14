@@ -42,6 +42,7 @@ export default function VideoDetail() {
             Videos
           </span>
           <span className="text-[#49719c] text-base font-medium leading-normal">/</span>
+          <span className="text-[#141414] text-base font-medium leading-normal">{video.title}</span>
         </div>
         {/* Title */}
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d141c] leading-tight mb-2">
