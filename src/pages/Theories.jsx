@@ -47,15 +47,13 @@ export default function Theories({ search }) {
             >
               {/* Right: Image */}
               <div
-                className="w-[300px] min-w-[250px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
+                className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
                 style={{
                   backgroundImage: `url(${getImageUrl(theory.image_url)})`,
-                  height: 180,
-                  maxHeight: 200,
                 }}
               />
               {/* Left: Text */}
-              <div className="flex flex-col justify-start flex-1 min-w-0 pt-2">
+              <div className="flex flex-col justify-start flex-[2_2_0px] pt-2">
                 <p className="text-[#101419] text-base font-bold leading-tight mb-1">
                   {theory.title}
                 </p>
