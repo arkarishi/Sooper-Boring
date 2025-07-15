@@ -232,24 +232,23 @@ function SectionCards({ title, items }) {
   );
 }
 
-// Designer Spotlights - Circular cards (modified)
+// Designer Spotlights - Grid layout for 4 cards
 function SpotlightsSection({ items }) {
   return (
     <div className="w-full max-w-5xl mt-12">
       <h2 className="text-2xl font-bold text-gray-900 mb-4 px-2">Instructional Designers Spotlight</h2>
-      <div className="flex gap-8 sm:gap-12 md:gap-14 overflow-x-auto px-2 pb-2 hide-scrollbar">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-2">
         {items.map((item, idx) => (
           <div
             key={idx}
             className="flex flex-col items-center"
-            style={{ minWidth: 180, maxWidth: 220 }}
           >
             <div
-              className="w-32 h-32 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-center bg-cover mb-4 sm:mb-6 shadow-xl border-4 border-white"
+              className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-full bg-center bg-cover mb-5 shadow-xl border-4 border-white"
               style={{ backgroundImage: `url(${item.image})` }}
             />
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 text-center">{item.title}</h3>
-            <p className="text-sm sm:text-base text-gray-500 text-center">{item.desc}</p>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 text-center">{item.title}</h3>
+            <p className="text-base sm:text-lg text-gray-500 text-center">{item.desc}</p>
           </div>
         ))}
       </div>
