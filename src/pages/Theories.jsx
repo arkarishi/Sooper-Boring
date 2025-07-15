@@ -47,11 +47,11 @@ export default function Theories({ search }) {
             >
               {/* Right: Image */}
               <div
-                className="w-[220px] min-w-[180px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
+                className="w-[300px] min-w-[250px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
                 style={{
                   backgroundImage: `url(${getImageUrl(theory.image_url)})`,
-                  height: 140,
-                  maxHeight: 160,
+                  height: 180,
+                  maxHeight: 200,
                 }}
               />
               {/* Left: Text */}
@@ -73,11 +73,6 @@ export default function Theories({ search }) {
                 >
                   Read More
                 </button>
-                <span className="text-xs text-gray-400 mt-2">
-                  {theory.created_at && (
-                    <>Published on {new Date(theory.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
-                  )}
-                </span>
               </div>
             </motion.div>
           ))}
