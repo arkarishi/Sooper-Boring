@@ -58,7 +58,7 @@ export default function Theories({ search }) {
                   {theory.title}
                 </p>
                 {theory.intro && (
-                  <p className="text-[#58728d] text-sm font-normal leading-normal mb-4">
+                  <p className="text-[#58728d] text-sm font-normal leading-normal mb-4 line-clamp-2">
                     {theory.intro}
                   </p>
                 )}

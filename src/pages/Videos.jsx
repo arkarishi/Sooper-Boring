@@ -61,7 +61,7 @@ export default function Videos({ search }) {
                   {video.title}
                 </p>
                 <div
-                  className="text-[#49719c] text-sm font-normal leading-normal prose prose-sm max-w-none"
+                  className="text-[#49719c] text-sm font-normal leading-normal prose prose-sm max-w-none line-clamp-2"
                   dangerouslySetInnerHTML={{ __html: video.description || "" }}
                 />
                 <span className="text-xs text-gray-400 mt-2">

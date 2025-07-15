@@ -59,7 +59,7 @@ export default function Articles({ search }) {
                 <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif tracking-[-0.015em]">
                   {article.title}
                 </p>
-                <p className="text-[#49719c] text-base font-normal leading-normal mb-1">
+                <p className="text-[#49719c] text-base font-normal leading-normal mb-1 line-clamp-2">
                   {article.description}
                 </p>
                 <span className="text-xs text-gray-400 mt-2">
