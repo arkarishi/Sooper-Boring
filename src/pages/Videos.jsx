@@ -52,16 +52,32 @@ export default function Videos({ search }) {
               key={video.id}
               whileHover={{ backgroundColor: "#f6f6f6" }}
               transition={{ type: "spring", stiffness: 160, damping: 22 }}
-              className="flex items-stretch gap-8 cursor-pointer px-0 py-3 transition-all"
+              className="flex flex-row-reverse items-start gap-8 cursor-pointer px-0 py-3 transition-all"
               onClick={() => navigate(`/videos/${video.id}`)}
             >
+              {/* Right: Thumbnail */}
+              <div className="flex-shrink-0">
+                {isYouTube(video.video_url) ? (
+                  <img
+                    src={`https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg`}
+                    alt="YouTube Thumbnail"
+                    className="w-[460px] min-w-[340px] h-[280px] max-h-[320px] rounded-xl object-cover"
+                  />
+                ) : (
+                  <img
+                    src={getImageUrl(video.thumbnail_url)}
+                    alt="Video Thumbnail"
+                    className="w-[460px] min-w-[340px] h-[280px] max-h-[320px] rounded-xl object-cover"
+                  />
+                )}
+              </div>
               {/* Left: Text */}
-              <div className="flex flex-col justify-center flex-1 min-w-0">
-                <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif truncate">
+              <div className="flex flex-col justify-start flex-1 min-w-0 pt-2">
+                <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif tracking-[-0.015em]">
                   {video.title}
                 </p>
                 <div
-                  className="text-[#49719c] text-base font-normal leading-normal mb-1 truncate prose prose-sm max-w-none"
+                  className="text-[#49719c] text-base font-normal leading-normal mb-1 prose prose-sm max-w-none"
                   dangerouslySetInnerHTML={{ __html: video.description || "" }}
                 />
                 <span className="text-xs text-gray-400 mt-2">
@@ -70,20 +86,6 @@ export default function Videos({ search }) {
                   )}
                 </span>
               </div>
-              {/* Right: Thumbnail */}
-              {isYouTube(video.video_url) ? (
-                <img
-                  src={`https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg`}
-                  alt="YouTube Thumbnail"
-                  className="w-[260px] min-w-[210px] h-[160px] max-h-[180px] rounded-xl object-cover flex-shrink-0"
-                />
-              ) : (
-                <img
-                  src={getImageUrl(video.thumbnail_url)}
-                  alt="Video Thumbnail"
-                  className="w-[260px] min-w-[210px] h-[160px] max-h-[180px] rounded-xl object-cover flex-shrink-0"
-                />
-              )}
             </motion.div>
           ))}
         </div>

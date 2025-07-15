@@ -42,24 +42,24 @@ export default function Articles({ search }) {
               key={article.id}
               whileHover={{ backgroundColor: "#f6f6f6" }}
               transition={{ type: "spring", stiffness: 160, damping: 22 }}
-              className="flex items-stretch gap-8 cursor-pointer px-0 py-3 transition-all"
+              className="flex items-start gap-8 cursor-pointer px-0 py-3 transition-all"
               onClick={() => navigate(`/articles/${article.id}`)}
             >
               {/* Left: Image */}
               <div
-                className="w-[260px] min-w-[210px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
+                className="w-[460px] min-w-[340px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
                 style={{
                   backgroundImage: `url(${article.image_url || placeholderImg})`,
-                  height: 160,
-                  maxHeight: 180,
+                  height: 280,
+                  maxHeight: 320,
                 }}
               />
               {/* Right: Text */}
-              <div className="flex flex-col justify-center flex-1 min-w-0">
-                <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif truncate">
+              <div className="flex flex-col justify-start flex-1 min-w-0 pt-2">
+                <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif tracking-[-0.015em]">
                   {article.title}
                 </p>
-                <p className="text-[#49719c] text-base font-normal leading-normal mb-1 truncate">
+                <p className="text-[#49719c] text-base font-normal leading-normal mb-1">
                   {article.description}
                 </p>
                 <span className="text-xs text-gray-400 mt-2">

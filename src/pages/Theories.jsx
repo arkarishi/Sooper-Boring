@@ -42,10 +42,10 @@ export default function Theories({ search }) {
               key={theory.id}
               whileHover={{ backgroundColor: "#f6f6f6" }}
               transition={{ type: "spring", stiffness: 160, damping: 22 }}
-              className="flex items-stretch gap-8 cursor-pointer px-0 py-3 transition-all"
+              className="flex flex-row-reverse items-start gap-8 cursor-pointer px-0 py-3 transition-all"
               onClick={() => navigate(`/theories/${theory.id}`)}
             >
-              {/* Left: Image */}
+              {/* Right: Image */}
               <div
                 className="w-[180px] min-w-[140px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
                 style={{
@@ -54,8 +54,8 @@ export default function Theories({ search }) {
                   maxHeight: 140,
                 }}
               />
-              {/* Right: Text */}
-              <div className="flex flex-col justify-center flex-1 min-w-0">
+              {/* Left: Text */}
+              <div className="flex flex-col justify-start flex-1 min-w-0">
                 <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif truncate">
                   {theory.title}
                 </p>
