@@ -149,36 +149,36 @@ export default function Home() {
   }
 
   return (
-    <section className="min-h-screen w-screen w-full bg-neutral-50 flex flex-col items-center font-[Newsreader,sans-serif] pb-20">
+    <section className="min-h-screen w-full bg-neutral-50 flex flex-col items-center font-[Newsreader,sans-serif] pb-10 sm:pb-20">
       <HeroBanner />
       <SectionCards title="Latest Articles" items={latestArticles} />
       <SectionCards title="Theories" items={theories} />
-      <SectionCards title="Videos" items={videos} /> {/* <-- Videos column */}
+      <SectionCards title="Videos" items={videos} />
       <SectionCards title="Jobs" items={jobs} />
       <SpotlightsSection items={spotlights} />
     </section>
   );
 }
 
-// Hero banner (unchanged)
+// Hero banner - Made fully responsive
 function HeroBanner() {
   return (
     <div
-      className="w-full flex flex-col items-start justify-end min-h-[380px] max-w-5xl mx-auto mt-10 px-8 py-8 rounded-xl bg-cover bg-center shadow"
+      className="w-full flex flex-col items-start justify-end min-h-[280px] sm:min-h-[340px] lg:min-h-[380px] max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 rounded-xl bg-cover bg-center shadow"
       style={{
         backgroundImage:
           "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuD-tR9rmSDwI7QaAQdo4o4Tob0QnLHMLEE4UNyH0pCllrN5BKsfo7GMoQOCUBPl6eMpfl0Ag5EY4QGJm3hbXOI0HimqTp9EDJk23145L5pgg4CwgvooBzmskDiyAnyaUjb3iJVQr5owXa3ZoI7ji_B7Tl3WIU_OY3ew7ORrbG-6dlMI0Y_10a8lzCOoml_uZnrGPBnSrGYygdW0X5tM35qMhNczeyqbZnvUtuw7SmRT1qDuylHkIw4DWObEWZ_kHNlh3r_hLkWDGw')",
       }}
     >
-      <h1 className="text-white text-4xl md:text-5xl font-extrabold mb-2 drop-shadow-lg">
+      <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 lg:mb-4 drop-shadow-lg leading-tight">
         Instructional Design Theories
       </h1>
-      <p className="text-white text-base md:text-lg mb-6 drop-shadow-lg max-w-xl">
+      <p className="text-white text-sm sm:text-base lg:text-lg mb-4 sm:mb-5 lg:mb-6 drop-shadow-lg max-w-xl leading-relaxed">
         Explore the world of instructional design theories with Sooper Boring. We provide in-depth articles, videos, and resources to help you master the art of effective learning design.
       </p>
       <Link
         to="/articles"
-        className="bg-black text-white rounded-full px-6 py-3 font-bold shadow hover:bg-neutral-800"
+        className="bg-black text-white rounded-full px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base font-bold shadow hover:bg-neutral-800 transition-colors"
       >
         Explore Articles
       </Link>
@@ -186,41 +186,77 @@ function HeroBanner() {
   );
 }
 
-// Generic Section for Cards (scrollable horizontally)
+// Generic Section for Cards - Made responsive with better mobile layout
 function SectionCards({ title, items }) {
-  const placeholder =
-    "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  const placeholder = "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  
   return (
-    <div className="w-full max-w-5xl mt-12">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4 px-2">{title}</h2>
-      <div className="flex gap-6 overflow-x-auto px-2 pb-2 hide-scrollbar">
+    <div className="w-full max-w-5xl mt-8 sm:mt-10 lg:mt-12 px-4 sm:px-6 lg:px-8">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+        {title}
+      </h2>
+      
+      {/* Mobile: Stack cards vertically, Tablet+: Horizontal scroll */}
+      <div className="block sm:hidden space-y-4 px-2">
         {items.map((item, idx) => (
           <Link
             key={idx}
             to={item.link}
-            className="w-[320px] flex-shrink-0 bg-white rounded-xl shadow flex flex-col hover:scale-105 transition-transform"
+            className="block bg-white rounded-xl shadow hover:shadow-lg transition-shadow"
+          >
+            <div className="flex gap-4 p-4">
+              <div
+                className="w-20 h-20 flex-shrink-0 bg-center bg-cover rounded-lg"
+                style={{
+                  backgroundImage: `url(${item.image || placeholder})`,
+                  backgroundColor: "#f3f4f6",
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-gray-800 mb-1 line-clamp-1">
+                  {item.title}
+                </h3>
+                {item.company && (
+                  <div className="text-xs text-gray-500 mb-1 line-clamp-1">
+                    {item.company}
+                    {item.location && <> · {item.location}</>}
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 line-clamp-2">
+                  {item.desc}
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+      
+      {/* Tablet and Desktop: Horizontal scroll */}
+      <div className="hidden sm:flex gap-4 lg:gap-6 overflow-x-auto px-2 pb-2 hide-scrollbar">
+        {items.map((item, idx) => (
+          <Link
+            key={idx}
+            to={item.link}
+            className="w-[280px] sm:w-[300px] lg:w-[320px] flex-shrink-0 bg-white rounded-xl shadow hover:shadow-lg hover:scale-105 transition-all flex flex-col"
             style={{ maxHeight: 340 }}
           >
             <div
-              className="h-40 w-full bg-center bg-cover rounded-t-xl"
+              className="h-32 sm:h-36 lg:h-40 w-full bg-center bg-cover rounded-t-xl"
               style={{
                 backgroundImage: `url(${item.image || placeholder})`,
                 backgroundColor: "#f3f4f6",
               }}
             />
-            <div className="p-4 flex flex-col flex-1">
-              {/* Title: always 1 line */}
-              <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">
+            <div className="p-3 sm:p-4 flex flex-col flex-1">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 line-clamp-1">
                 {item.title}
               </h3>
-              {/* Company and location: always 1 line, only for jobs */}
               {item.company && (
-                <div className="text-xs text-gray-500 mb-1 truncate">
+                <div className="text-xs text-gray-500 mb-1 line-clamp-1">
                   {item.company}
                   {item.location && <> · {item.location}</>}
                 </div>
               )}
-              {/* Description: always 2 lines */}
               <p className="text-sm text-gray-500 line-clamp-2">
                 {item.desc}
               </p>
@@ -232,30 +268,36 @@ function SectionCards({ title, items }) {
   );
 }
 
-// Designer Spotlights - Grid layout for 4 cards
+// Designer Spotlights - Made fully responsive
 function SpotlightsSection({ items }) {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full max-w-5xl mt-12">
+    <div className="w-full max-w-5xl mt-8 sm:mt-10 lg:mt-12 px-4 sm:px-6 lg:px-8">
       <h2 
-        className="text-2xl font-bold text-gray-900 mb-4 px-2 cursor-pointer hover:text-gray-700 transition-colors"
+        className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 px-2 cursor-pointer hover:text-gray-700 transition-colors"
         onClick={() => navigate('/spotlights')}
       >
         Instructional Designers Spotlight
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-2">
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 px-2">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center text-center hover:transform hover:scale-105 transition-transform cursor-pointer"
+            onClick={() => navigate('/spotlights')}
           >
             <div
-              className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-full bg-center bg-cover mb-5 shadow-xl border-4 border-white"
+              className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 rounded-full bg-center bg-cover mb-3 sm:mb-4 lg:mb-5 shadow-lg sm:shadow-xl border-2 sm:border-4 border-white"
               style={{ backgroundImage: `url(${item.image})` }}
             />
-            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 text-center">{item.title}</h3>
-            <p className="text-base sm:text-lg text-gray-500 text-center">{item.desc}</p>
+            <h3 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-800 mb-1 sm:mb-2 line-clamp-2">
+              {item.title}
+            </h3>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-500 line-clamp-3 px-2">
+              {item.desc}
+            </p>
           </div>
         ))}
       </div>
