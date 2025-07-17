@@ -4,7 +4,8 @@ import ArticleForm from "../components/forms/ArticleForm";
 import JobForm from "../components/forms/JobForm";
 import TheoryForm from "../components/forms/TheoryForm";
 import VideoForm from "../components/forms/VideoForm";
-import { FileText, Briefcase, Lightbulb, Video } from "lucide-react";
+import SpotlightForm from "../components/forms/SpotlightForm";
+import { FileText, Briefcase, Lightbulb, Video, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const formOptions = [
@@ -12,6 +13,7 @@ const formOptions = [
   { label: "Job", value: "job", icon: <Briefcase size={18} /> },
   { label: "Theory", value: "theory", icon: <Lightbulb size={18} /> },
   { label: "Video", value: "video", icon: <Video size={18} /> },
+  { label: "Spotlight", value: "spotlight", icon: <Star size={18} /> },
 ];
 
 export default function Dashboard() {
@@ -88,6 +90,7 @@ export default function Dashboard() {
             {selectedForm === "job" && <JobForm />}
             {selectedForm === "theory" && <TheoryForm />}
             {selectedForm === "video" && <VideoForm />}
+            {selectedForm === "spotlight" && <SpotlightForm />}
           </motion.div>
         </AnimatePresence>
       </motion.div>

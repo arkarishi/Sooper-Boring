@@ -234,9 +234,16 @@ function SectionCards({ title, items }) {
 
 // Designer Spotlights - Grid layout for 4 cards
 function SpotlightsSection({ items }) {
+  const navigate = useNavigate();
+
   return (
     <div className="w-full max-w-5xl mt-12">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4 px-2">Instructional Designers Spotlight</h2>
+      <h2 
+        className="text-2xl font-bold text-gray-900 mb-4 px-2 cursor-pointer hover:text-gray-700 transition-colors"
+        onClick={() => navigate('/spotlights')}
+      >
+        Instructional Designers Spotlight
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 px-2">
         {items.map((item, idx) => (
           <div

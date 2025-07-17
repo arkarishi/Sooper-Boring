@@ -11,11 +11,13 @@ import Articles from "./pages/Articles";
 import ArticleDetail from "./pages/ArticleDetail";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
-import JobDetail from "./pages/JobDetail"; // <-- Add this import
+import JobDetail from "./pages/JobDetail";
 import Theories from "./pages/Theories";
 import TheoryDetail from "./pages/TheoryDetail";
 import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
+import Spotlights from "./pages/Spotlights";
+import DetailSpotlights from "./pages/DetailSpotlights";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -43,7 +45,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/articles" element={<Articles search={search}i />} />
+            <Route path="/articles" element={<Articles search={search} />} />
             <Route path="/articles/:id" element={<ArticleDetail />} />
             <Route
               path="/dashboard"
@@ -52,11 +54,13 @@ function App() {
               }
             />
             <Route path="/jobs" element={<Jobs search={search} />} />
-            <Route path="/jobs/:id" element={<JobDetail />} /> {/* <-- Add this line */}
+            <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="/theories" element={<Theories search={search} />} />
             <Route path="/theories/:id" element={<TheoryDetail />} />
             <Route path="/videos" element={<Videos search={search} />} />
             <Route path="/videos/:id" element={<VideoDetail />} />
+            <Route path="/spotlights" element={<Spotlights search={search} />} />
+            <Route path="/spotlights/:id" element={<DetailSpotlights />} />
           </Routes>
         </main>
         <Footer />
