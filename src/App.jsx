@@ -4,6 +4,7 @@ import { supabase } from "./utils/supabaseClient";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import DashboardGuard from "./components/DashboardGuard";
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
@@ -50,7 +51,13 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                session ? <Dashboard session={session} /> : <Navigate to="/auth" replace />
+                session ? (
+                  <DashboardGuard>
+                    <Dashboard session={session} />
+                  </DashboardGuard>
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
               }
             />
             <Route path="/jobs" element={<Jobs search={search} />} />
