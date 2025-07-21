@@ -186,18 +186,18 @@ function HeroBanner() {
   );
 }
 
-// Generic Section for Cards - Made responsive with better mobile layout
+// Generic Section for Cards - Mobile view with padding, desktop without padding
 function SectionCards({ title, items }) {
   const placeholder = "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
   
   return (
-    <div className="w-full max-w-5xl mt-8 sm:mt-10 lg:mt-12 px-4 sm:px-6 lg:px-8">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+    <div className="w-full max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 px-4 sm:px-0">
         {title}
       </h2>
       
-      {/* Mobile: Stack cards vertically, Tablet+: Horizontal scroll */}
-      <div className="block sm:hidden space-y-4 px-2">
+      {/* Mobile: Stack cards vertically with padding */}
+      <div className="block sm:hidden space-y-4 px-4">
         {items.map((item, idx) => (
           <Link
             key={idx}
@@ -231,24 +231,23 @@ function SectionCards({ title, items }) {
         ))}
       </div>
       
-      {/* Tablet and Desktop: Horizontal scroll */}
-      <div className="hidden sm:flex gap-4 lg:gap-6 overflow-x-auto px-2 pb-2 hide-scrollbar">
+      {/* Tablet and Desktop: Responsive grid that fills hero banner width */}
+      <div className="hidden sm:grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2 lg:gap-3">
         {items.map((item, idx) => (
           <Link
             key={idx}
             to={item.link}
-            className="w-[280px] sm:w-[300px] lg:w-[320px] flex-shrink-0 bg-white rounded-xl shadow hover:shadow-lg hover:scale-105 transition-all flex flex-col"
-            style={{ maxHeight: 340 }}
+            className="bg-white rounded-xl shadow hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex flex-col group w-full"
           >
             <div
-              className="h-32 sm:h-36 lg:h-40 w-full bg-center bg-cover rounded-t-xl"
+              className="h-32 sm:h-36 lg:h-40 w-full bg-center bg-cover rounded-t-xl group-hover:brightness-105 transition-all duration-200"
               style={{
                 backgroundImage: `url(${item.image || placeholder})`,
                 backgroundColor: "#f3f4f6",
               }}
             />
             <div className="p-3 sm:p-4 flex flex-col flex-1">
-              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 line-clamp-1">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 line-clamp-1 group-hover:text-gray-900 transition-colors">
                 {item.title}
               </h3>
               {item.company && (
@@ -257,7 +256,7 @@ function SectionCards({ title, items }) {
                   {item.location && <> · {item.location}</>}
                 </div>
               )}
-              <p className="text-sm text-gray-500 line-clamp-2">
+              <p className="text-sm text-gray-500 line-clamp-2 group-hover:text-gray-600 transition-colors">
                 {item.desc}
               </p>
             </div>
@@ -268,24 +267,24 @@ function SectionCards({ title, items }) {
   );
 }
 
-// Designer Spotlights - Made fully responsive
+// Designer Spotlights - Mobile view with padding, desktop without padding
 function SpotlightsSection({ items }) {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full max-w-5xl mt-8 sm:mt-10 lg:mt-12 px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8">
       <h2 
-        className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 px-2 cursor-pointer hover:text-gray-700 transition-colors"
+        className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 cursor-pointer hover:text-gray-700 transition-colors px-4 sm:px-0"
         onClick={() => navigate('/spotlights')}
       >
         Instructional Designers Spotlight
       </h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 px-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-6 px-4 sm:px-0">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center text-center hover:transform hover:scale-105 transition-transform cursor-pointer"
+            className="flex flex-col items-center text-center hover:transform hover:scale-105 transition-transform cursor-pointer w-full"
             onClick={() => navigate('/spotlights')}
           >
             <div
