@@ -256,7 +256,7 @@ function SectionCards({ title, items }) {
   );
 }
 
-// Designer Spotlights - Mobile view with padding, desktop without padding
+// Designer Spotlights - Route individual cards to detail pages
 function SpotlightsSection({ items }) {
   const navigate = useNavigate();
 
@@ -274,7 +274,7 @@ function SpotlightsSection({ items }) {
           <div
             key={idx}
             className="flex flex-col items-center text-center hover:transform hover:scale-105 transition-transform cursor-pointer w-full"
-            onClick={() => navigate('/spotlights')}
+            onClick={() => navigate(item.link)}
           >
             <div
               className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 rounded-full bg-center bg-cover mb-3 sm:mb-4 lg:mb-5 shadow-lg sm:shadow-xl border-2 sm:border-4 border-white"
