@@ -37,42 +37,14 @@ export default function Home() {
   const [theories, setTheories] = useState([]);
   const [videos, setVideos] = useState([]);
   const [jobs, setJobs] = useState([]);
-  const [spotlights] = useState([
-    {
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCIl_4bMjvEIH6o_-ry3E-wF0b5Tgeeqi2FRmDj9k1Ic0gWy6D0R1UQ6VmAOZBfigF7rFrJi9L_0PbHWUGPyS3JyHUTf0MgAzNE1xasJGQd5ECfnvRXrwgf5phyzqe2sxBNJDlRwrb8hP-GhM5o7Dn-wWGoFujlFe3zfO27rxnbyGA_Wpbqkzj8Gc4Y-8BRKmGNrrSI57glhQuznyl2eUxGHCGOfBf4FtX3xSxgI_o9ANnosrJaBvdVvc-0lirlB_6DhfhHLc16Pw",
-      title: "Dr. Amelia Bennett",
-      desc: "A leading expert in cognitive load theory and instructional design.",
-      link: "#",
-    },
-    {
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuA5-_sxUNnBD2f41TAojgF6jj9Vi8oOaDCW9vykQWVCmngExSlk_Adgs2Py820BQ481bR10Wf14BzXEJUXwepODbPeFBlqUkDayoqES191S2DYAVMJDaSb3scTAO0ujTz2Xn4z76vOH33WlitFjaJkFGdVqECgpoBjl-PiNtAcjanT7Dpfp6waMfsrDFd1A70CIHaDhs4qaGd74TFS5EEBaM98TsjbdZq9dzaIgYTvrRevdVAQtU_8dHfTtO-2Luv2tfcOKnTLQAA",
-      title: "Ethan Harper",
-      desc: "An experienced e-learning developer and learning experience designer.",
-      link: "#",
-    },
-    {
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCcSSKY-mCERXHqYf-_lSBq20UfwAur5qKHnXQ1_18q1Pp1OG8YoZphLoDa6y4772TUDGsTn3nvULB16-Yfmo9gso3E2cWt3zC9WSobsSS-tNWBghmUjZxIwvIOO76D1c3mOXeUg8nOJPd7-tsUf6qYjUA3z-4Z26BN5e0hVRxCPJvoXr_UxNM8m3arw1qG64lljXxjYg3riB0NleM88x3WAVKzix1smOOkFBuPHPv2bIXtURVrGuuIyQLQUNJwD345OeyOg0QBNQ",
-      title: "Olivia Bennett",
-      desc: "A renowned instructional designer specializing in corporate training.",
-      link: "#",
-    },
-    {
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBBnRaDmpfQsAbVmi2w4sHE6g0RWLjc4TUU4w8fMTj-I51H3zx44GlXVczJmc8QJvrgjE2I2M987hvFKb1EEsZdEzZhbdgJeEp0kx5RmSLr4ggcjlj7j-UHKDnGP_rIMwUhwNTGkR_RtD5788EW8mDPkCPlaPSEh2ktEdz0-jTAvLSH_KXFEeLcvKgPMOiLFS_fTYpruFRcykDughHJuGqVKYs0y8I6Tp-wIQ_M4gg7Xu0ATF3obDdu7zEZif9OHAiD18VTHqXYdA",
-      title: "Owen Carter",
-      desc: "A creative instructional designer with a focus on gamification.",
-      link: "#",
-    },
-  ]);
+  const [spotlights, setSpotlights] = useState([]);
 
   useEffect(() => {
     fetchLatestArticles();
     fetchLatestTheories();
     fetchLatestVideos();
     fetchLatestJobs();
+    fetchLatestSpotlights();
   }, []);
 
   // Fetch 3 latest articles
@@ -144,6 +116,23 @@ export default function Home() {
         location: job.location,
         posted_at: job.posted_at,
         link: `/jobs/${job.id}`,
+      }))
+    );
+  }
+
+  // Fetch 4 latest spotlights
+  async function fetchLatestSpotlights() {
+    const { data } = await supabase
+      .from("spotlights")
+      .select("id, name, description, image_url, created_at")
+      .order("created_at", { ascending: false })
+      .limit(4);
+    setSpotlights(
+      (data || []).map((s) => ({
+        image: getSpotlightImageUrl(s.image_url),
+        title: s.name,
+        desc: s.description,
+        link: `/spotlights/${s.id}`,
       }))
     );
   }
@@ -302,6 +291,13 @@ function SpotlightsSection({ items }) {
       </div>
     </div>
   );
+}
+
+// Helper for spotlight images (Supabase storage)
+function getSpotlightImageUrl(path) {
+  if (!path) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  const { data } = supabase.storage.from("spotlight-images").getPublicUrl(path);
+  return data?.publicUrl || "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
 }
 
 // Hides ugly scrollbars in Chrome/Edge
