@@ -57,15 +57,15 @@ export default function Videos({ search }) {
             >
               {/* Desktop/Laptop View - Horizontal Layout */}
               <div className="hidden lg:flex items-start gap-8 px-0 py-3">
-                {/* Left: Image */}
+                {/* Left: Image with YouTube 16:9 aspect ratio */}
                 <div
-                  className="w-[460px] min-w-[340px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
+                  className="w-[460px] min-w-[340px] bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
                   style={{
                     backgroundImage: isYouTube(video.video_url) 
                       ? `url(https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg)`
                       : `url(${getImageUrl(video.thumbnail_url)})`,
-                    height: 280,
-                    maxHeight: 320,
+                    aspectRatio: '16/9',
+                    backgroundColor: "#f3f4f6",
                   }}
                 />
                 {/* Right: Text */}
@@ -87,13 +87,14 @@ export default function Videos({ search }) {
 
               {/* Mobile/Tablet View - Card Layout */}
               <div className="lg:hidden bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                {/* Image */}
+                {/* Image with YouTube 16:9 aspect ratio */}
                 <div
-                  className="w-full h-48 sm:h-56 bg-center bg-cover rounded-t-xl"
+                  className="w-full bg-center bg-cover rounded-t-xl"
                   style={{
                     backgroundImage: isYouTube(video.video_url) 
                       ? `url(https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg)`
                       : `url(${getImageUrl(video.thumbnail_url)})`,
+                    aspectRatio: '16/9',
                     backgroundColor: "#f3f4f6",
                   }}
                 />
