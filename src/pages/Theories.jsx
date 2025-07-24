@@ -46,16 +46,16 @@ export default function Theories({ search }) {
               className="cursor-pointer transition-all rounded-lg"
               onClick={() => navigate(`/theories/${theory.id}`)}
             >
-              {/* Desktop/Laptop View - Horizontal Layout (Image Right, Text Left) */}
-              <div className="hidden lg:flex flex-row-reverse items-start gap-8 px-2 sm:px-0 py-3">
-                {/* Right: Image */}
+              {/* Desktop/Laptop View - Horizontal Layout (Image Left, Content Right) */}
+              <div className="hidden lg:flex items-start gap-8 px-2 sm:px-0 py-3">
+                {/* Left: Image */}
                 <div
                   className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
                   style={{
                     backgroundImage: `url(${getImageUrl(theory.image_url)})`,
                   }}
                 />
-                {/* Left: Text */}
+                {/* Right: Text Content */}
                 <div className="flex flex-col justify-start flex-[2_2_0px] pt-2">
                   <p className="text-[#101419] text-base font-bold leading-tight mb-1">
                     {theory.title}

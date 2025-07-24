@@ -48,6 +48,12 @@ export default function VideoDetail() {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d141c] leading-tight mb-2">
           {video.title}
         </h1>
+        {/* Description (short summary) */}
+        {video.description && (
+          <p className="text-[#0d141c] text-base font-normal leading-normal pb-3 pt-1 italic">
+            {video.description}
+          </p>
+        )}
         {/* Author and Date */}
         <div className="mb-6 text-[#49719c] text-sm">
           {video.author && <>By {video.author} · </>}
@@ -75,12 +81,6 @@ export default function VideoDetail() {
             </video>
           )}
         </div>
-        {/* Description (short summary) */}
-        {video.description && (
-          <p className="text-[#0d141c] text-base font-normal leading-normal pb-3 pt-1">
-            {video.description}
-          </p>
-        )}
         {/* Body (full content, rich HTML) */}
         <div
           className="prose prose-lg text-gray-700 mb-8"

@@ -55,21 +55,20 @@ export default function Videos({ search }) {
               className="cursor-pointer transition-all"
               onClick={() => navigate(`/videos/${video.id}`)}
             >
-              {/* Desktop/Laptop View - Horizontal Layout */}
-              <div className="hidden lg:flex items-start gap-8 px-0 py-3">
-                {/* Left: Image with YouTube 16:9 aspect ratio */}
+              {/* Desktop/Laptop View - Horizontal Layout (Image Left, Content Right) */}
+              <div className="hidden lg:flex items-start gap-8 px-2 sm:px-0 py-3">
+                {/* Left: Image with same dimensions as Theories */}
                 <div
-                  className="w-[460px] min-w-[340px] bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
+                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
                   style={{
                     backgroundImage: isYouTube(video.video_url) 
                       ? `url(https://img.youtube.com/vi/${getYouTubeID(video.video_url)}/hqdefault.jpg)`
                       : `url(${getImageUrl(video.thumbnail_url)})`,
-                    aspectRatio: '16/9',
                     backgroundColor: "#f3f4f6",
                   }}
                 />
-                {/* Right: Text */}
-                <div className="flex flex-col justify-start flex-1 min-w-0 pt-2">
+                {/* Right: Text Content */}
+                <div className="flex flex-col justify-start flex-[2_2_0px] pt-2">
                   <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif tracking-[-0.015em]">
                     {video.title}
                   </p>

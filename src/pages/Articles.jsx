@@ -46,19 +46,17 @@ export default function Articles({ search }) {
               className="cursor-pointer transition-all"
               onClick={() => navigate(`/articles/${article.id}`)}
             >
-              {/* Desktop/Laptop View - Horizontal Layout */}
-              <div className="hidden lg:flex items-start gap-8 px-0 py-3">
-                {/* Left: Image */}
+              {/* Desktop/Laptop View - Horizontal Layout (Image Left, Content Right) */}
+              <div className="hidden lg:flex items-start gap-8 px-2 sm:px-0 py-3">
+                {/* Left: Image with same dimensions as Theories */}
                 <div
-                  className="w-[460px] min-w-[340px] aspect-video bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0"
+                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
                   style={{
                     backgroundImage: `url(${article.image_url || placeholderImg})`,
-                    height: 280,
-                    maxHeight: 320,
                   }}
                 />
-                {/* Right: Text */}
-                <div className="flex flex-col justify-start flex-1 min-w-0 pt-2">
+                {/* Right: Text Content */}
+                <div className="flex flex-col justify-start flex-[2_2_0px] pt-2">
                   <p className="text-[#101419] text-lg font-bold leading-tight mb-1 font-serif tracking-[-0.015em]">
                     {article.title}
                   </p>

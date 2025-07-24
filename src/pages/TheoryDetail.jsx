@@ -50,6 +50,13 @@ export default function TheoryDetail() {
           <span className="text-[#141414] text-sm sm:text-base font-medium leading-normal truncate">{theory.title}</span>
         </div>
 
+        {/* Intro/Description */}
+        {theory.intro && (
+          <div className="text-[#141414] text-sm sm:text-base font-normal leading-relaxed pb-4 sm:pb-6 pt-1">
+            {theory.intro}
+          </div>
+        )}
+
         {/* Banner Image */}
         <div
           className="w-full rounded-xl overflow-hidden flex flex-col justify-end min-h-64 sm:min-h-80 lg:min-h-96 mb-6 sm:mb-8"
@@ -72,13 +79,6 @@ export default function TheoryDetail() {
             <>Published on {new Date(theory.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
           )}
         </div>
-
-        {/* Intro/Description */}
-        {theory.intro && (
-          <div className="text-[#141414] text-sm sm:text-base font-normal leading-relaxed pb-4 sm:pb-6 pt-1">
-            {theory.intro}
-          </div>
-        )}
 
         {/* Principles */}
         {Array.isArray(theory.principles) && theory.principles.length > 0 && (
