@@ -5,6 +5,7 @@ import { supabase } from "./utils/supabaseClient";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import DashboardGuard from "./components/DashboardGuard";
+import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
@@ -40,6 +41,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="w-screen min-h-screen flex flex-col w-full bg-neutral-50">
         <Navbar search={search} setSearch={setSearch} session={session} />
         <main className="flex-grow">

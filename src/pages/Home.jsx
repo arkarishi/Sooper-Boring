@@ -178,10 +178,30 @@ function HeroBanner() {
 // Generic Section for Cards - Mobile view with padding, desktop without padding
 function SectionCards({ title, items }) {
   const placeholder = "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  const navigate = useNavigate();
+  
+  // Map section titles to their routes
+  const getRouteFromTitle = (title) => {
+    switch(title.toLowerCase()) {
+      case 'latest articles':
+        return '/articles';
+      case 'theories':
+        return '/theories';
+      case 'videos':
+        return '/videos';
+      case 'jobs':
+        return '/jobs';
+      default:
+        return '/';
+    }
+  };
   
   return (
     <div className="w-full max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 px-4 sm:px-0">
+      <h2 
+        className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 px-4 sm:px-0 cursor-pointer hover:text-gray-700 transition-colors"
+        onClick={() => navigate(getRouteFromTitle(title))}
+      >
         {title}
       </h2>
       
