@@ -55,7 +55,7 @@ export default function Spotlights({ search }) {
               <div className="hidden lg:flex items-center justify-between gap-8 px-0 py-3">
                 {/* Left: Profile Image */}
                 <div
-                  className="w-16 h-16 min-w-16 bg-white border border-gray-200 rounded-full flex items-center justify-center overflow-hidden bg-cover bg-center"
+                  className="w-20 h-20 min-w-20 bg-white border border-gray-200 rounded-full flex items-center justify-center overflow-hidden bg-cover bg-center"
                   style={{
                     backgroundImage: `url(${getImageUrl(spotlight.image_url)})`,
                   }}
@@ -88,7 +88,7 @@ export default function Spotlights({ search }) {
                   <div className="flex items-start gap-4">
                     {/* Profile Image */}
                     <div
-                      className="w-12 h-12 sm:w-16 sm:h-16 bg-white border border-gray-200 rounded-full flex items-center justify-center overflow-hidden bg-cover bg-center flex-shrink-0"
+                      className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-200 rounded-full flex items-center justify-center overflow-hidden bg-cover bg-center flex-shrink-0"
                       style={{
                         backgroundImage: `url(${getImageUrl(spotlight.image_url)})`,
                       }}
