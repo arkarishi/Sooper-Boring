@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../utils/supabaseClient";
 
+// Import floating images
+import float1 from '../assets/images/floating/float1.png';
+
 // Helper for job images (Supabase storage)
 function getJobImageUrl(path) {
   if (!path) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
@@ -149,29 +152,172 @@ export default function Home() {
   );
 }
 
-// Hero banner - Made fully responsive
+// Enhanced Hero banner with carousel functionality
 function HeroBanner() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const slides = [
+    {
+      backgroundImage: "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuD-tR9rmSDwI7QaAQdo4o4Tob0QnLHMLEE4UNyH0pCllrN5BKsfo7GMoQOCUBPl6eMpfl0Ag5EY4QGJm3hbXOI0HimqTp9EDJk23145L5pgg4CwgvooBzmskDiyAnyaUjb3iJVQr5owXa3ZoI7ji_B7Tl3WIU_OY3ew7ORrbG-6dlMI0Y_10a8lzCOoml_uZnrGPBnSrGYygdW0X5tM35qMhNczeyqbZnvUtuw7SmRT1qDuylHkIw4DWObEWZ_kHNlh3r_hLkWDGw')",
+      title: "Instructional Design Theories",
+      description: "Explore the world of instructional design theories with Sooper Boring. We provide in-depth articles, videos, and resources to help you master the art of effective learning design.",
+      buttonText: "Explore Articles",
+      buttonLink: "/articles"
+    },
+    {
+      backgroundImage: "linear-gradient(rgba(0,0,0,0.2),rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
+      title: "Learning Theories & Frameworks",
+      description: "Dive deep into cognitive load theory, constructivism, and other foundational frameworks that shape modern instructional design practices.",
+      buttonText: "View Theories",
+      buttonLink: "/theories"
+    },
+    {
+      backgroundImage: "linear-gradient(rgba(0,0,0,0.2),rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
+      title: "Video Learning Resources",
+      description: "Watch expert insights and practical tutorials on instructional design methodologies, tools, and best practices for creating engaging learning experiences.",
+      buttonText: "Watch Videos",
+      buttonLink: "/videos"
+    },
+    {
+      backgroundImage: "linear-gradient(rgba(0,0,0,0.2),rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
+      title: "Career Opportunities",
+      description: "Discover exciting job opportunities in instructional design, e-learning development, and educational technology from leading organizations.",
+      buttonText: "Browse Jobs",
+      buttonLink: "/jobs"
+    }
+  ];
+
+  // Auto-play functionality
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+  };
+
   return (
-    <div
-      className="w-full flex flex-col items-start justify-end min-h-[280px] sm:min-h-[340px] lg:min-h-[380px] max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 rounded-xl bg-cover bg-center shadow"
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuD-tR9rmSDwI7QaAQdo4o4Tob0QnLHMLEE4UNyH0pCllrN5BKsfo7GMoQOCUBPl6eMpfl0Ag5EY4QGJm3hbXOI0HimqTp9EDJk23145L5pgg4CwgvooBzmskDiyAnyaUjb3iJVQr5owXa3ZoI7ji_B7Tl3WIU_OY3ew7ORrbG-6dlMI0Y_10a8lzCOoml_uZnrGPBnSrGYygdW0X5tM35qMhNczeyqbZnvUtuw7SmRT1qDuylHkIw4DWObEWZ_kHNlh3r_hLkWDGw')",
-      }}
-    >
-      <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-2 sm:mb-3 lg:mb-4 drop-shadow-lg leading-tight">
-        Instructional Design Theories
-      </h1>
-      <p className="text-white text-sm sm:text-base lg:text-lg mb-4 sm:mb-5 lg:mb-6 drop-shadow-lg max-w-xl leading-relaxed">
-        Explore the world of instructional design theories with Sooper Boring. We provide in-depth articles, videos, and resources to help you master the art of effective learning design.
-      </p>
-      <Link
-        to="/articles"
-        className="bg-black text-white rounded-full px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base font-bold shadow hover:bg-neutral-800 transition-colors"
-      >
-        Explore Articles
-      </Link>
+    <div className="relative w-full max-w-6xl mx-auto mt-2 sm:mt-4 lg:mt-6 px-2 sm:px-4 lg:px-6">
+      <div className="relative overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl shadow-md sm:shadow-lg lg:shadow-xl">
+        {/* Slides Container */}
+        <div 
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+        >
+          {slides.map((slide, index) => (
+            <div
+              key={index}
+              className="w-full flex-shrink-0 flex flex-col justify-center sm:justify-end min-h-[240px] xs:min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[400px] xl:min-h-[440px] px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-3 xs:py-4 sm:py-6 md:py-8 lg:py-10 bg-cover bg-center relative overflow-hidden"
+              style={{ backgroundImage: slide.backgroundImage }}
+            >
+              {/* Overlay for better text readability */}
+              <div className="absolute inset-0 bg-black bg-opacity-20 sm:bg-opacity-10"></div>
+              
+              {/* Main content */}
+              <div className="relative z-10 max-w-full sm:max-w-2xl lg:max-w-3xl">
+                <h1 className="text-white text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold sm:font-extrabold mb-2 xs:mb-3 sm:mb-4 lg:mb-6 drop-shadow-lg leading-tight">
+                  {slide.title}
+                </h1>
+                <p className="text-white text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl mb-3 xs:mb-4 sm:mb-5 lg:mb-6 xl:mb-8 drop-shadow-lg leading-relaxed opacity-95">
+                  {slide.description}
+                </p>
+                <Link
+                  to={slide.buttonLink}
+                  className="inline-block bg-black text-white rounded-full px-3 xs:px-4 sm:px-5 md:px-6 lg:px-7 xl:px-8 py-1.5 xs:py-2 sm:py-2.5 md:py-3 lg:py-3.5 text-xs xs:text-sm sm:text-base md:text-lg font-semibold sm:font-bold shadow-lg hover:bg-gray-800 hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                >
+                  {slide.buttonText}
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation Arrows */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-1 xs:left-2 sm:left-3 md:left-4 lg:left-5 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-70 text-white p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-full transition-all duration-200 z-20 shadow-lg hover:shadow-xl"
+          aria-label="Previous slide"
+        >
+          <svg className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <button
+          onClick={nextSlide}
+          className="absolute right-1 xs:right-2 sm:right-3 md:right-4 lg:right-5 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-70 text-white p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-full transition-all duration-200 z-20 shadow-lg hover:shadow-xl"
+          aria-label="Next slide"
+        >
+          <svg className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Slide Indicators */}
+        <div className="absolute bottom-2 xs:bottom-3 sm:bottom-4 md:bottom-5 lg:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-1 xs:space-x-1.5 sm:space-x-2 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 rounded-full transition-all duration-200 shadow-sm ${
+                index === currentSlide 
+                  ? 'bg-white shadow-md' 
+                  : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
     </div>
+  );
+}
+
+// Floating Images Component
+function FloatingImages() {
+  const images = [
+    {
+      src: float1,
+      alt: "Floating illustration",
+      className: "floating-image-1",
+      style: {
+        top: "10%",
+        right: "5%",
+        width: "80px",
+        height: "80px",
+      }
+    }
+    // Add more floating images here if you have more files like float2.png, float3.png etc.
+  ];
+
+  return (
+    <>
+      {images.map((image, index) => (
+        <div
+          key={index}
+          className={`absolute opacity-20 hover:opacity-40 transition-all duration-500 hidden lg:block ${image.className}`}
+          style={image.style}
+        >
+          <img
+            src={image.src}
+            alt={image.alt}
+            className="w-full h-full object-cover rounded-full shadow-lg animate-float"
+          />
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -197,16 +343,16 @@ function SectionCards({ title, items }) {
   };
   
   return (
-    <div className="w-full max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8">
+    <div className="relative w-full max-w-6xl mx-auto mt-2 sm:mt-4 lg:mt-6 px-2 sm:px-4 lg:px-6">
       <h2 
-        className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 px-4 sm:px-0 cursor-pointer hover:text-gray-700 transition-colors"
+        className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 cursor-pointer hover:text-gray-700 transition-colors"
         onClick={() => navigate(getRouteFromTitle(title))}
       >
         {title}
       </h2>
       
       {/* Mobile: Stack cards vertically with padding */}
-      <div className="block sm:hidden space-y-4 px-4">
+      <div className="block sm:hidden space-y-4">
         {items.map((item, idx) => (
           <Link
             key={idx}
@@ -281,15 +427,15 @@ function SpotlightsSection({ items }) {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full max-w-5xl mx-auto mt-4 sm:mt-6 lg:mt-10 mx-4 sm:mx-6 lg:mx-8">
+    <div className="relative w-full max-w-6xl mx-auto mt-2 sm:mt-4 lg:mt-6 px-2 sm:px-4 lg:px-6">
       <h2 
-        className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 cursor-pointer hover:text-gray-700 transition-colors px-4 sm:px-0"
+        className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 cursor-pointer hover:text-gray-700 transition-colors"
         onClick={() => navigate('/spotlights')}
       >
         Instructional Designers Spotlight
       </h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-6 px-4 sm:px-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-6">
         {items.map((item, idx) => (
           <div
             key={idx}

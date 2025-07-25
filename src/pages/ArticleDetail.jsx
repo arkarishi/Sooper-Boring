@@ -30,7 +30,7 @@ export default function ArticleDetail() {
     <div className="min-h-screen bg-slate-50 py-10" style={{ fontFamily: 'Newsreader, "Noto Sans", sans-serif' }}>
       <div className="max-w-6xl mx-auto px-4">
         {/* Breadcrumb */}
-        <div className="flex flex-wrap gap-2 mb-4 px-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           <span
             className="text-[#49719c] text-base font-medium leading-normal cursor-pointer hover:underline"
             onClick={() => navigate("/articles")}
