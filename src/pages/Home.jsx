@@ -219,18 +219,18 @@ function HeroBanner() {
           {slides.map((slide, index) => (
             <div
               key={index}
-              className="w-full flex-shrink-0 flex flex-col justify-center sm:justify-end min-h-[240px] xs:min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[400px] xl:min-h-[440px] px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-3 xs:py-4 sm:py-6 md:py-8 lg:py-10 bg-cover bg-center relative overflow-hidden"
+              className="w-full flex-shrink-0 flex flex-col justify-center items-start text-left min-h-[200px] xs:min-h-[240px] sm:min-h-[280px] md:min-h-[320px] lg:min-h-[360px] xl:min-h-[400px] px-4 xs:px-5 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-4 xs:py-5 sm:py-6 md:py-8 lg:py-10 bg-cover bg-center relative overflow-hidden"
               style={{ backgroundImage: slide.backgroundImage }}
             >
               {/* Overlay for better text readability */}
               <div className="absolute inset-0 bg-black bg-opacity-20 sm:bg-opacity-10"></div>
               
-              {/* Main content */}
-              <div className="relative z-10 max-w-full sm:max-w-2xl lg:max-w-3xl">
-                <h1 className="text-white text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold sm:font-extrabold mb-2 xs:mb-3 sm:mb-4 lg:mb-6 drop-shadow-lg leading-tight">
+              {/* Main content - Left Aligned */}
+              <div className="relative z-10 max-w-full sm:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-0 sm:ml-2 md:ml-2 lg:ml-2 xl:ml-2 mt-8 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24">
+                <h1 className="text-white text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold sm:font-extrabold mb-2 xs:mb-3 sm:mb-4 lg:mb-5 xl:mb-6 drop-shadow-lg leading-tight">
                   {slide.title}
                 </h1>
-                <p className="text-white text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl mb-3 xs:mb-4 sm:mb-5 lg:mb-6 xl:mb-8 drop-shadow-lg leading-relaxed opacity-95">
+                <p className="text-white text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl mb-3 xs:mb-4 sm:mb-5 lg:mb-6 xl:mb-7 drop-shadow-lg leading-relaxed opacity-95">
                   {slide.description}
                 </p>
                 <Link
@@ -247,31 +247,31 @@ function HeroBanner() {
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-1 xs:left-2 sm:left-3 md:left-4 lg:left-5 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-70 text-white p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-full transition-all duration-200 z-20 shadow-lg hover:shadow-xl"
+          className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1.5 sm:p-2 rounded-full transition-all duration-200 z-30 shadow-lg hover:shadow-xl"
           aria-label="Previous slide"
         >
-          <svg className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         
         <button
           onClick={nextSlide}
-          className="absolute right-1 xs:right-2 sm:right-3 md:right-4 lg:right-5 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-70 text-white p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-full transition-all duration-200 z-20 shadow-lg hover:shadow-xl"
+          className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1.5 sm:p-2 rounded-full transition-all duration-200 z-30 shadow-lg hover:shadow-xl"
           aria-label="Next slide"
         >
-          <svg className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-2 xs:bottom-3 sm:bottom-4 md:bottom-5 lg:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-1 xs:space-x-1.5 sm:space-x-2 z-20">
+        <div className="absolute bottom-3 sm:bottom-4 md:bottom-5 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 rounded-full transition-all duration-200 shadow-sm ${
+              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-200 shadow-sm ${
                 index === currentSlide 
                   ? 'bg-white shadow-md' 
                   : 'bg-white bg-opacity-50 hover:bg-opacity-75'
@@ -287,20 +287,7 @@ function HeroBanner() {
 
 // Floating Images Component
 function FloatingImages() {
-  const images = [
-    {
-      src: float1,
-      alt: "Floating illustration",
-      className: "floating-image-1",
-      style: {
-        top: "10%",
-        right: "5%",
-        width: "80px",
-        height: "80px",
-      }
-    }
-    // Add more floating images here if you have more files like float2.png, float3.png etc.
-  ];
+  
 
   return (
     <>
