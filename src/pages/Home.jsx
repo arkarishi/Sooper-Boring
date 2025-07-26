@@ -158,7 +158,7 @@ function HeroBanner() {
   
   const slides = [
     {
-      backgroundImage: "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuD-tR9rmSDwI7QaAQdo4o4Tob0QnLHMLEE4UNyH0pCllrN5BKsfo7GMoQOCUBPl6eMpfl0Ag5EY4QGJm3hbXOI0HimqTp9EDJk23145L5pgg4CwgvooBzmskDiyAnyaUjb3iJVQr5owXa3ZoI7ji_B7Tl3WIU_OY3ew7ORrbG-6dlMI0Y_10a8lzCOoml_uZnrGPBnSrGYygdW0X5tM35qMhNczeyqbZnvUtuw7SmRT1qDuylHkIw4DWObEWZ_kHNlh3r_hLkWDGw')",
+      backgroundImage: "linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.4)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuD-tR9rmSDwI7QaAQdo4o4Tob0QnLHMLEE4UNyH0pCllrN5BKsfo7GMoQOCUBPl6eMpfl0Ag5EY4QGJm3hbXOI0HimqTp9EDJk23145L5pgg4CwgvooBzmskDiyAnyaUjb3iJVQr5owXa3ZoI7ji_B7Tl3WIUOY3ew7ORrbG-6dlMI0Y_10a8lzCOoml_uZnrGPBnSrGYygdW0X5tM35qMhNczeyqbZnvUtuw7SmRT1qDuylHkIw4DWObEWZ_kHNlh3r_hLkWDGw')",
       title: "Instructional Design Theories",
       description: "Explore the world of instructional design theories with Sooper Boring. We provide in-depth articles, videos, and resources to help you master the art of effective learning design.",
       buttonText: "Explore Articles",
@@ -338,17 +338,17 @@ function SectionCards({ title, items }) {
         {title}
       </h2>
       
-      {/* Mobile: Stack cards vertically with padding */}
+      {/* Mobile: Stack cards vertically with transparent background */}
       <div className="block sm:hidden space-y-4">
         {items.map((item, idx) => (
           <Link
             key={idx}
             to={item.link}
-            className="block bg-white rounded-xl shadow hover:shadow-lg transition-shadow"
+            className="block bg-transparent rounded-xl hover:bg-gray-100 hover:bg-opacity-30 transition-all"
           >
             <div className="flex gap-4 p-4">
               <div
-                className="w-20 h-20 flex-shrink-0 bg-center bg-cover rounded-lg"
+                className="w-20 h-20 flex-shrink-0 bg-center bg-cover rounded-lg shadow-md"
                 style={{
                   backgroundImage: `url(${item.image || placeholder})`,
                   backgroundColor: "#f3f4f6",
@@ -373,16 +373,16 @@ function SectionCards({ title, items }) {
         ))}
       </div>
       
-      {/* Tablet and Desktop: Responsive grid that fills hero banner width */}
+      {/* Tablet and Desktop: Responsive grid with transparent cards */}
       <div className="hidden sm:grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2 lg:gap-3">
         {items.map((item, idx) => (
           <Link
             key={idx}
             to={item.link}
-            className="bg-white rounded-xl shadow hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex flex-col group w-full"
+            className="bg-transparent rounded-xl hover:bg-gray-100 hover:bg-opacity-20 hover:scale-[1.02] transition-all duration-200 flex flex-col group w-full"
           >
             <div
-              className="h-32 sm:h-36 lg:h-40 w-full bg-center bg-cover rounded-t-xl group-hover:brightness-105 transition-all duration-200"
+              className="h-32 sm:h-36 lg:h-40 w-full bg-center bg-cover rounded-xl group-hover:brightness-105 transition-all duration-200 shadow-md"
               style={{
                 backgroundImage: `url(${item.image || placeholder})`,
                 backgroundColor: "#f3f4f6",
