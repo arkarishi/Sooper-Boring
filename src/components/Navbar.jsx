@@ -274,7 +274,7 @@ export default function Navbar({ search, setSearch }) {
       {/* Left: Logo */}
       <div className="flex items-center gap-4">
         <Link to="/" className="text-xl font-bold text-black font-serif tracking-tight">
-          Sooper Boring
+          Design Hub
         </Link>
         {/* Hamburger for mobile */}
         <button
