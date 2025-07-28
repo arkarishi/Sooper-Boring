@@ -294,7 +294,10 @@ export default function Navbar({ search, setSearch }) {
           <Link to="/jobs" className="text-black hover:text-blue-600">Jobs</Link>
           <Link to="/spotlights" className="text-black hover:text-blue-600">Spotlights</Link>
           {user && (
-            <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
+            <>
+              <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
+              <Link to="/edit-profile" className="text-black hover:text-blue-600">Profile</Link>
+            </>
           )}
         </div>
       </div>

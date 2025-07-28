@@ -20,6 +20,7 @@ import Videos from "./pages/Videos";
 import VideoDetail from "./pages/VideoDetail";
 import Spotlights from "./pages/Spotlights";
 import DetailSpotlights from "./pages/DetailSpotlights";
+import EditProfile from "./pages/EditProfile";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -70,6 +71,16 @@ function App() {
             <Route path="/videos/:id" element={<VideoDetail />} />
             <Route path="/spotlights" element={<Spotlights search={search} />} />
             <Route path="/spotlights/:id" element={<DetailSpotlights />} />
+            <Route 
+              path="/edit-profile" 
+              element={
+                session ? (
+                  <EditProfile session={session} />
+                ) : (
+                  <Navigate to="/auth" replace />
+                )
+              } 
+            />
           </Routes>
         </main>
         <Footer />
