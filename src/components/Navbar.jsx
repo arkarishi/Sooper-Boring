@@ -296,7 +296,7 @@ export default function Navbar({ search, setSearch }) {
           {user && (
             <>
               <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
-              <Link to="/edit-profile" className="text-black hover:text-blue-600">Profile</Link>
+              <Link to="/profile" className="text-black hover:text-blue-600">My Profile</Link>
             </>
           )}
         </div>
@@ -333,7 +333,10 @@ export default function Navbar({ search, setSearch }) {
             <Link to="/jobs" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Jobs</Link>
             <Link to="/spotlights" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Spotlights</Link>
             {user && (
-              <Link to="/dashboard" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+              <>
+                <Link to="/dashboard" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+                <Link to="/profile" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>My Profile</Link>
+              </>
             )}
             {!isDashboard && (
               <div className="mt-2">
