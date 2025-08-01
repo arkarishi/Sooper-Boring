@@ -63,7 +63,14 @@ export default function DetailProfile({ session }) {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          setError('Profile not found');
+          // Profile not found
+          // If it's the current user's profile (no ID in params), redirect to edit
+          if (!id && session?.user?.id === userId) {
+            navigate('/edit-profile');
+            return;
+          } else {
+            setError('Profile not found');
+          }
         } else {
           setError(`Error loading profile: ${error.message}`);
         }
@@ -92,12 +99,21 @@ export default function DetailProfile({ session }) {
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg text-[#0d0f1c] mb-4">{error || 'Profile not found'}</div>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Go Home
-          </button>
+          {canEdit ? (
+            <button
+              onClick={() => navigate('/edit-profile')}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2"
+            >
+              Create Profile
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/')}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Go Home
+            </button>
+          )}
         </div>
       </div>
     );
@@ -219,7 +235,7 @@ export default function DetailProfile({ session }) {
               {/* About Me Section */}
               <section id="about" className="px-4 scroll-mt-24">
                 <h2 className="text-[#0d0f1c] text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">About Me</h2>
-                <p className="text-[#0d0f1c] text-base font-normal leading-normal pb-3 pt-1">
+                <p className="text-[#47579e] text-sm font-normal leading-normal">
                   {profile.about_me || 'No information provided yet.'}
                 </p>
               </section>

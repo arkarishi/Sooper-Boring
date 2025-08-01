@@ -237,6 +237,100 @@ function SearchDropdown({ search, setSearch, onItemClick }) {
   );
 }
 
+// Profile dropdown component
+function ProfileDropdown({ user, onLogout }) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('profile_photo_url, name')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+    setShowDropdown(false);
+  };
+
+  const handleLogoutClick = () => {
+    onLogout();
+    setShowDropdown(false);
+  };
+
+  // Generate a random profile image if none exists
+  const getProfileImageUrl = () => {
+    if (profile?.profile_photo_url) {
+      return profile.profile_photo_url;
+    }
+    
+    // Generate a random avatar using DiceBear API with the user's email as seed
+    const seed = user?.email || 'default';
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e6e9f4&textColor=0d0f1c`;
+  };
+
+  return (
+    <div className="relative">
+      <div
+        onClick={() => setShowDropdown(!showDropdown)}
+        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all duration-200"
+        style={{
+          backgroundImage: `url("${getProfileImageUrl()}")`,
+          backgroundColor: "#e6e9f4"
+        }}
+      />
+
+      {showDropdown && (
+        <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="py-1">
+            {profile?.name && (
+              <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                <div className="font-medium">{profile.name}</div>
+                <div className="text-xs text-gray-500">{user.email}</div>
+              </div>
+            )}
+            <button
+              onClick={handleProfileClick}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              My Profile
+            </button>
+            <button
+              onClick={handleLogoutClick}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 bg-white hover:bg-red-50 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Navbar({ search, setSearch }) {
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -294,13 +388,11 @@ export default function Navbar({ search, setSearch }) {
           <Link to="/jobs" className="text-black hover:text-blue-600">Jobs</Link>
           <Link to="/spotlights" className="text-black hover:text-blue-600">Spotlights</Link>
           {user && (
-            <>
-              <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
-              <Link to="/profile" className="text-black hover:text-blue-600">My Profile</Link>
-            </>
+            <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
           )}
         </div>
       </div>
+      
       {/* Right: Search + Auth (desktop) */}
       <div className="hidden sm:flex items-center gap-4">
         {!isDashboard && (
@@ -311,18 +403,14 @@ export default function Navbar({ search, setSearch }) {
           />
         )}
         {user ? (
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
-          >
-            Logout
-          </button>
+          <ProfileDropdown user={user} onLogout={handleLogout} />
         ) : (
           <Link to="/auth" className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">
             Login/Sign Up
           </Link>
         )}
       </div>
+      
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="absolute top-full left-0 w-full bg-white border-b border-gray-200 z-50 flex flex-col sm:hidden">
