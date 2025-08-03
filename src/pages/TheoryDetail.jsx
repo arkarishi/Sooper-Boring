@@ -80,45 +80,13 @@ export default function TheoryDetail() {
           )}
         </div>
 
-        {/* Principles */}
-        {Array.isArray(theory.principles) && theory.principles.length > 0 && (
+        {/* Content */}
+        {theory.content && (
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-[#141414] text-lg sm:text-xl lg:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 sm:pb-4 pt-2 sm:pt-3">
-              Principles
-            </h2>
-            <ul className="list-disc list-inside text-gray-700 text-sm sm:text-base leading-relaxed space-y-2">
-              {theory.principles.map((item, idx) => (
-                <li key={idx} className="pl-2">{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Applications */}
-        {Array.isArray(theory.applications) && theory.applications.length > 0 && (
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-[#141414] text-lg sm:text-xl lg:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 sm:pb-4 pt-2 sm:pt-3">
-              Applications
-            </h2>
-            <ul className="list-disc list-inside text-gray-700 text-sm sm:text-base leading-relaxed space-y-2">
-              {theory.applications.map((item, idx) => (
-                <li key={idx} className="pl-2">{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Examples */}
-        {Array.isArray(theory.examples) && theory.examples.length > 0 && (
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-[#141414] text-lg sm:text-xl lg:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 sm:pb-4 pt-2 sm:pt-3">
-              Examples
-            </h2>
-            <ul className="list-disc list-inside text-gray-700 text-sm sm:text-base leading-relaxed space-y-2">
-              {theory.examples.map((item, idx) => (
-                <li key={idx} className="pl-2">{item}</li>
-              ))}
-            </ul>
+            <div 
+              className="text-gray-700 text-sm sm:text-base leading-relaxed prose prose-sm sm:prose-base max-w-none prose-headings:text-[#141414] prose-headings:font-bold prose-h1:text-lg sm:prose-h1:text-xl lg:prose-h1:text-[22px] prose-h2:text-base sm:prose-h2:text-lg lg:prose-h2:text-xl prose-ul:space-y-2 prose-ol:space-y-2 prose-li:pl-2"
+              dangerouslySetInnerHTML={{ __html: theory.content }}
+            />
           </div>
         )}
       </div>

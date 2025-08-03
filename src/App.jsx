@@ -4,7 +4,6 @@ import { supabase } from "./utils/supabaseClient";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import DashboardGuard from "./components/DashboardGuard";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
@@ -56,9 +55,7 @@ function App() {
               path="/dashboard"
               element={
                 session ? (
-                  <DashboardGuard>
-                    <Dashboard session={session} />
-                  </DashboardGuard>
+                  <Dashboard session={session} />
                 ) : (
                   <Navigate to="/auth" replace />
                 )

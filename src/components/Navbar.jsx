@@ -333,6 +333,7 @@ function ProfileDropdown({ user, onLogout }) {
 
 export default function Navbar({ search, setSearch }) {
   const [user, setUser] = useState(null);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -340,16 +341,44 @@ export default function Navbar({ search, setSearch }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data?.session?.user || null);
+      if (data?.session?.user) {
+        checkAdminAccess(data.session.user.email);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
+      if (session?.user) {
+        checkAdminAccess(session.user.email);
+      } else {
+        setHasAdminAccess(false);
+      }
     });
 
     return () => {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  const checkAdminAccess = async (email) => {
+    try {
+      const { data: dashboardUser, error } = await supabase
+        .from('dashboard_users')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking admin access:', error);
+        setHasAdminAccess(false);
+      } else {
+        setHasAdminAccess(!!dashboardUser);
+      }
+    } catch (err) {
+      console.error('Admin access check failed:', err);
+      setHasAdminAccess(false);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -387,7 +416,7 @@ export default function Navbar({ search, setSearch }) {
           <Link to="/videos" className="text-black hover:text-blue-600">Videos</Link>
           <Link to="/jobs" className="text-black hover:text-blue-600">Jobs</Link>
           <Link to="/spotlights" className="text-black hover:text-blue-600">Spotlights</Link>
-          {user && (
+          {user && hasAdminAccess && (
             <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
           )}
         </div>
@@ -420,11 +449,11 @@ export default function Navbar({ search, setSearch }) {
             <Link to="/videos" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Videos</Link>
             <Link to="/jobs" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Jobs</Link>
             <Link to="/spotlights" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Spotlights</Link>
+            {user && hasAdminAccess && (
+              <Link to="/dashboard" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+            )}
             {user && (
-              <>
-                <Link to="/dashboard" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                <Link to="/profile" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>My Profile</Link>
-              </>
+              <Link to="/profile" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>My Profile</Link>
             )}
             {!isDashboard && (
               <div className="mt-2">
