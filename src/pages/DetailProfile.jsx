@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate, useParams } from 'react-router-dom';
-
 export default function DetailProfile({ session }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -264,7 +263,7 @@ export default function DetailProfile({ session }) {
                         </div>
                         {profile.project1_folder_url && (
                           <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#e6e9f4] text-[#0d0f1c] text-sm font-medium leading-normal w-fit">
-                            <span className="truncate">View Project</span>
+                            <span className="truncate" >View Project</span>
                           </button>
                         )}
                       </div>
@@ -341,8 +340,22 @@ export default function DetailProfile({ session }) {
                     const title = profile[`experience${num}_title`];
                     const startDate = profile[`experience${num}_start_date`];
                     const endDate = profile[`experience${num}_end_date`];
+                    const isCurrent = profile[`experience${num}_current`];
                     
                     if (!title && !startDate && !endDate) return null;
+                    
+                    // Format dates for display
+                    const formatDisplayDate = (dateString) => {
+                      if (!dateString) return '';
+                      const date = new Date(dateString);
+                      return date.toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        year: 'numeric' 
+                      });
+                    };
+                    
+                    const startFormatted = formatDisplayDate(startDate);
+                    const endFormatted = isCurrent ? 'Present' : formatDisplayDate(endDate);
                     
                     return (
                       <div key={num} className="flex gap-4 p-4 border border-[#ced3e9] rounded-xl">
@@ -358,7 +371,7 @@ export default function DetailProfile({ session }) {
                             {title || 'No title provided'}
                           </p>
                           <p className="text-[#47579e] text-base font-normal leading-normal">
-                            {startDate || endDate ? `${startDate || 'Unknown'} - ${endDate || 'Present'}` : 'No dates provided'}
+                            {startFormatted || endFormatted ? `${startFormatted || 'Unknown'} - ${endFormatted || 'Unknown'}` : 'No dates provided'}
                           </p>
                           </div>
                       </div>

@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import skillsData from '../data/skills.json';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import '../styles/datepicker.css';
 
 export default function EditProfile({ session }) {
   const [user, setUser] = useState(session?.user || null);
@@ -32,16 +35,16 @@ export default function EditProfile({ session }) {
     // Skills
     skills: [],
     
-    // Experience
+    // Experience - Now using Date objects
     experience1_title: '',
-    experience1_start_date: '',
-    experience1_end_date: '',
+    experience1_start_date: null,
+    experience1_end_date: null,
     experience2_title: '',
-    experience2_start_date: '',
-    experience2_end_date: '',
+    experience2_start_date: null,
+    experience2_end_date: null,
     experience3_title: '',
-    experience3_start_date: '',
-    experience3_end_date: ''
+    experience3_start_date: null,
+    experience3_end_date: null
   });
   
   const [activeTab, setActiveTab] = useState('about');
@@ -95,7 +98,18 @@ export default function EditProfile({ session }) {
         console.error('Error fetching profile:', error);
         setError(`Database error: ${error.message}`);
       } else if (data) {
-        setProfile(data);
+        // Parse dates when loading profile
+        const parsedProfile = {
+          ...data,
+          experience1_start_date: parseDate(data.experience1_start_date),
+          experience1_end_date: parseDate(data.experience1_end_date),
+          experience2_start_date: parseDate(data.experience2_start_date),
+          experience2_end_date: parseDate(data.experience2_end_date),
+          experience3_start_date: parseDate(data.experience3_start_date),
+          experience3_end_date: parseDate(data.experience3_end_date)
+        };
+        
+        setProfile(parsedProfile);
         if (data.skills && Array.isArray(data.skills)) {
           setSelectedSkills(data.skills);
         }
@@ -300,6 +314,44 @@ export default function EditProfile({ session }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Helper function to parse date strings to Date objects
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+    if (dateString instanceof Date) return dateString;
+    
+    // Handle different date formats
+    if (typeof dateString === 'string') {
+      // If it's already in ISO format
+      if (dateString.includes('T') || dateString.includes('-')) {
+        return new Date(dateString);
+      }
+      // If it's in "Month Year" format
+      const monthYearRegex = /^(\w+)\s+(\d{4})$/;
+      const match = dateString.match(monthYearRegex);
+      if (match) {
+        const [, month, year] = match;
+        return new Date(`${month} 1, ${year}`);
+      }
+    }
+    
+    return null;
+  };
+
+  // Helper function to format date for display and storage
+  const formatDateForStorage = (date) => {
+    if (!date) return null;
+    return date.toISOString();
+  };
+
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', { 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
+  // Update the saveProfile function to handle date formatting
   const saveProfile = async () => {
     if (!user) return;
     try {
@@ -308,7 +360,14 @@ export default function EditProfile({ session }) {
         skills: selectedSkills,
         id: user.id,
         email: user.email,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Format dates for storage
+        experience1_start_date: formatDateForStorage(profile.experience1_start_date),
+        experience1_end_date: formatDateForStorage(profile.experience1_end_date),
+        experience2_start_date: formatDateForStorage(profile.experience2_start_date),
+        experience2_end_date: formatDateForStorage(profile.experience2_end_date),
+        experience3_start_date: formatDateForStorage(profile.experience3_start_date),
+        experience3_end_date: formatDateForStorage(profile.experience3_end_date)
       };
 
       const { error } = await supabase
@@ -325,38 +384,46 @@ export default function EditProfile({ session }) {
     }
   };
 
-  const renderUploadProgress = (uploadKey) => {
-    const state = uploadStates[uploadKey];
+  // Upload progress renderer
+  const renderUploadProgress = (field) => {
+    const state = uploadStates[field];
+    
     if (!state.uploading && state.progress === 0) return null;
 
     return (
-      <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-        {state.uploading && (
-          <>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm text-blue-800">Uploading... {Math.round(state.progress)}%</span>
-            </div>
-            <div className="w-full bg-blue-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${state.progress}%` }}
-              ></div>
-            </div>
-          </>
-        )}
+      <div className="px-4 py-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-[#0d0f1c]">
+            {state.uploading ? 'Uploading...' : 'Upload Complete'}
+          </span>
+          <span className="text-sm text-[#47579e]">{Math.round(state.progress)}%</span>
+        </div>
         
+        {/* Progress Bar */}
+        <div className="w-full bg-[#ced3e9] rounded-full h-2 mb-2">
+          <div 
+            className={`h-2 rounded-full transition-all duration-300 ${
+              state.progress === 100 ? 'bg-green-500' : 'bg-[#4264fa]'
+            }`}
+            style={{ width: `${state.progress}%` }}
+          />
+        </div>
+
+        {/* File List for Folder Uploads */}
         {state.files && state.files.length > 0 && (
           <div className="mt-3">
-            <p className="text-sm font-medium text-blue-800 mb-2">Files ({state.files.length}):</p>
+            <p className="text-xs text-[#47579e] mb-2">Files ({state.files.length}):</p>
             <div className="max-h-32 overflow-y-auto space-y-1">
               {state.files.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 text-xs">
-                  {file.status === 'pending' && <div className="w-2 h-2 bg-gray-400 rounded-full"></div>}
-                  {file.status === 'uploading' && <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>}
-                  {file.status === 'completed' && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
-                  <span className={`${file.status === 'completed' ? 'text-green-700' : 'text-gray-600'}`}>
-                    {file.name}
+                <div key={index} className="flex items-center justify-between text-xs">
+                  <span className="text-[#0d0f1c] truncate flex-1 mr-2">{file.name}</span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    file.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    file.status === 'uploading' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {file.status === 'completed' ? '✓' : 
+                     file.status === 'uploading' ? '⟳' : '○'}
                   </span>
                 </div>
               ))}
@@ -364,17 +431,50 @@ export default function EditProfile({ session }) {
           </div>
         )}
 
-        {!state.uploading && state.progress === 100 && (
-          <div className="flex items-center gap-2 text-green-700">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Success Message */}
+        {state.progress === 100 && !state.uploading && (
+          <div className="flex items-center gap-2 mt-2">
+            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span className="text-sm font-medium">Upload completed!</span>
+            <span className="text-sm text-green-600 font-medium">Upload successful!</span>
           </div>
         )}
       </div>
     );
   };
+
+  // Custom DatePicker component with styling
+  const CustomDatePicker = ({ 
+    selected, 
+    onChange, 
+    placeholderText, 
+    disabled = false,
+    maxDate = null,
+    minDate = null
+  }) => (
+    <div className="relative">
+      <DatePicker
+        selected={selected}
+        onChange={onChange}
+        dateFormat="MMMM yyyy"
+        showMonthYearPicker
+        placeholderText={placeholderText}
+        maxDate={maxDate}
+        minDate={minDate}
+        disabled={disabled}
+        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#4264fa] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal cursor-pointer"
+        wrapperClassName="w-full"
+        calendarClassName="custom-datepicker"
+        popperClassName="custom-datepicker-popper"
+      />
+      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-[#47579e]">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -969,21 +1069,44 @@ export default function EditProfile({ session }) {
                 <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
                     <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Start Date</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
-                      value={profile.experience1_start_date}
-                      onChange={(e) => handleInputChange('experience1_start_date', e.target.value)}
-                      placeholder="e.g., January 2020"
+                    <CustomDatePicker
+                      selected={profile.experience1_start_date}
+                      onChange={(date) => handleInputChange('experience1_start_date', date)}
+                      placeholderText="Start Date"
+                      maxDate={profile.experience1_end_date || new Date()}
                     />
                   </label>
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                  {!profile.experience1_current && (
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                      <CustomDatePicker
+                        selected={profile.experience1_end_date}
+                        onChange={(date) => handleInputChange('experience1_end_date', date)}
+                        placeholderText="End Date"
+                        minDate={profile.experience1_start_date}
+                        maxDate={new Date()}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div className="max-w-[480px] px-4 pb-3">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
-                      value={profile.experience1_end_date}
-                      onChange={(e) => handleInputChange('experience1_end_date', e.target.value)}
-                      placeholder="e.g., Present"
+                      type="checkbox"
+                      checked={profile.experience1_current || false}
+                      onChange={(e) => {
+                        handleInputChange('experience1_current', e.target.checked);
+                        if (e.target.checked) {
+                          handleInputChange('experience1_end_date', null);
+                        }
+                      }}
+                      className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
+                      style={{
+                        backgroundColor: profile.experience1_current ? '#4264fa' : '#fff',
+                        borderColor: profile.experience1_current ? '#4264fa' : '#ced3e9'
+                      }}
                     />
+                    <span className="text-[#47579e] text-sm font-medium">Currently working here</span>
                   </label>
                 </div>
 
@@ -1003,21 +1126,44 @@ export default function EditProfile({ session }) {
                 <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
                     <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Start Date</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
-                      value={profile.experience2_start_date}
-                      onChange={(e) => handleInputChange('experience2_start_date', e.target.value)}
-                      placeholder="Enter start date"
+                    <CustomDatePicker
+                      selected={profile.experience2_start_date}
+                      onChange={(date) => handleInputChange('experience2_start_date', date)}
+                      placeholderText="Start Date"
+                      maxDate={profile.experience2_end_date || new Date()}
                     />
                   </label>
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                  {!profile.experience2_current && (
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                      <CustomDatePicker
+                        selected={profile.experience2_end_date}
+                        onChange={(date) => handleInputChange('experience2_end_date', date)}
+                        placeholderText="End Date"
+                        minDate={profile.experience2_start_date}
+                        maxDate={new Date()}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div className="max-w-[480px] px-4 pb-3">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
-                      value={profile.experience2_end_date}
-                      onChange={(e) => handleInputChange('experience2_end_date', e.target.value)}
-                      placeholder="Enter end date"
+                      type="checkbox"
+                      checked={profile.experience2_current || false}
+                      onChange={(e) => {
+                        handleInputChange('experience2_current', e.target.checked);
+                        if (e.target.checked) {
+                          handleInputChange('experience2_end_date', null);
+                        }
+                      }}
+                      className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
+                      style={{
+                        backgroundColor: profile.experience2_current ? '#4264fa' : '#fff',
+                        borderColor: profile.experience2_current ? '#4264fa' : '#ced3e9'
+                      }}
                     />
+                    <span className="text-[#47579e] text-sm font-medium">Currently working here</span>
                   </label>
                 </div>
 
@@ -1037,21 +1183,44 @@ export default function EditProfile({ session }) {
                 <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
                     <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Start Date</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
-                      value={profile.experience3_start_date}
-                      onChange={(e) => handleInputChange('experience3_start_date', e.target.value)}
-                      placeholder="Enter start date"
+                    <CustomDatePicker
+                      selected={profile.experience3_start_date}
+                      onChange={(date) => handleInputChange('experience3_start_date', date)}
+                      placeholderText="Start Date"
+                      maxDate={profile.experience3_end_date || new Date()}
                     />
                   </label>
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                  {!profile.experience3_current && (
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                      <CustomDatePicker
+                        selected={profile.experience3_end_date}
+                        onChange={(date) => handleInputChange('experience3_end_date', date)}
+                        placeholderText="End Date"
+                        minDate={profile.experience3_start_date}
+                        maxDate={new Date()}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div className="max-w-[480px] px-4 pb-3">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
-                      value={profile.experience3_end_date}
-                      onChange={(e) => handleInputChange('experience3_end_date', e.target.value)}
-                      placeholder="Enter end date"
+                      type="checkbox"
+                      checked={profile.experience3_current || false}
+                      onChange={(e) => {
+                        handleInputChange('experience3_current', e.target.checked);
+                        if (e.target.checked) {
+                          handleInputChange('experience3_end_date', null);
+                        }
+                      }}
+                      className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
+                      style={{
+                        backgroundColor: profile.experience3_current ? '#4264fa' : '#fff',
+                        borderColor: profile.experience3_current ? '#4264fa' : '#ced3e9'
+                      }}
                     />
+                    <span className="text-[#47579e] text-sm font-medium">Currently working here</span>
                   </label>
                 </div>
               </>
