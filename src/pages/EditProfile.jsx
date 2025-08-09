@@ -39,12 +39,15 @@ export default function EditProfile({ session }) {
     experience1_title: '',
     experience1_start_date: null,
     experience1_end_date: null,
+    experience1_current: false,
     experience2_title: '',
     experience2_start_date: null,
     experience2_end_date: null,
+    experience2_current: false,
     experience3_title: '',
     experience3_start_date: null,
-    experience3_end_date: null
+    experience3_end_date: null,
+    experience3_current: false
   });
   
   const [activeTab, setActiveTab] = useState('about');
@@ -391,12 +394,12 @@ export default function EditProfile({ session }) {
     if (!state.uploading && state.progress === 0) return null;
 
     return (
-      <div className="px-4 py-2">
+      <div className="px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-[#0d0f1c]">
+          <span className="text-xs sm:text-sm font-medium text-[#0d0f1c]">
             {state.uploading ? 'Uploading...' : 'Upload Complete'}
           </span>
-          <span className="text-sm text-[#47579e]">{Math.round(state.progress)}%</span>
+          <span className="text-xs sm:text-sm text-[#47579e]">{Math.round(state.progress)}%</span>
         </div>
         
         {/* Progress Bar */}
@@ -437,7 +440,7 @@ export default function EditProfile({ session }) {
             <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span className="text-sm text-green-600 font-medium">Upload successful!</span>
+            <span className="text-xs sm:text-sm text-green-600 font-medium">Upload successful!</span>
           </div>
         )}
       </div>
@@ -463,13 +466,13 @@ export default function EditProfile({ session }) {
         maxDate={maxDate}
         minDate={minDate}
         disabled={disabled}
-        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#4264fa] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal cursor-pointer"
+        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#4264fa] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal cursor-pointer"
         wrapperClassName="w-full"
         calendarClassName="custom-datepicker"
         popperClassName="custom-datepicker-popper"
       />
-      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-[#47579e]">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-[#47579e]">
+        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
@@ -478,16 +481,16 @@ export default function EditProfile({ session }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
-        <div className="text-lg text-[#0d0f1c]">Loading...</div>
+      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center px-4">
+        <div className="text-base sm:text-lg text-[#0d0f1c]">Loading...</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
-        <div className="text-lg text-[#0d0f1c]">Please log in to continue...</div>
+      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center px-4">
+        <div className="text-base sm:text-lg text-[#0d0f1c]">Please log in to continue...</div>
       </div>
     );
   }
@@ -495,31 +498,32 @@ export default function EditProfile({ session }) {
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-[#f8f9fc] group/design-root overflow-x-hidden" style={{fontFamily: '"Work Sans", "Noto Sans", sans-serif'}}>
       <div className="layout-container flex h-full grow flex-col">
-        <div className="px-40 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+        <div className="px-4 sm:px-6 md:px-8 lg:px-16 xl:px-40 flex flex-1 justify-center py-4 sm:py-5">
+          <div className="layout-content-container flex flex-col max-w-[480px] sm:max-w-[600px] md:max-w-[720px] lg:max-w-[960px] flex-1 w-full">
+            
             {/* Profile Header */}
-            <div className="flex p-4">
-              <div className="flex w-full flex-col gap-4 items-center">
-                <div className="flex gap-4 flex-col items-center">
+            <div className="flex p-3 sm:p-4">
+              <div className="flex w-full flex-col gap-3 sm:gap-4 items-center">
+                <div className="flex gap-3 sm:gap-4 flex-col items-center">
                   <div
-                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full min-h-32 w-32"
+                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full min-h-24 w-24 sm:min-h-28 sm:w-28 md:min-h-32 md:w-32"
                     style={{backgroundImage: `url("${profile.profile_photo_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBENKwH5nxkytSSvv9toA494x-gAePUj0MlHpaEoRNu-6u_LkhO7frHlxdTZtB-RDN91ClkxwhxLCKSuc0DGiCASQpdsKUgErw98KJxZHMVWhaHKyUmskZzRk-OShdv-uHb4okA-_yrwS2qshQDp7iJrQusoYRbd87JF-01zdeKwzKDuG-aMbLYrNWjXcqAFxq-ACDXoNhoavNiJVXs8dtDM3AureQYuWelAgCJK7Xr3zlcda9WrJs8pQ_DsJVwNdF79VTIjG2XhbE'}")`}}
                   />
-                  <div className="flex flex-col items-center justify-center">
-                    <p className="text-[#0d0f1c] text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">
+                  <div className="flex flex-col items-center justify-center px-2">
+                    <p className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">
                       {profile.name || 'Your Name'}
                     </p>
-                    <p className="text-[#47579e] text-base font-normal leading-normal text-center">
+                    <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal text-center">
                       {profile.title || 'Your Title'}
                     </p>
-                    <p className="text-[#47579e] text-base font-normal leading-normal text-center">
+                    <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal text-center">
                       {profile.bio || 'Your Bio'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={saveProfile}
-                  className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#e6e9f4] text-[#0d0f1c] text-sm font-bold leading-normal tracking-[0.015em] w-full max-w-[480px]"
+                  className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 bg-[#e6e9f4] text-[#0d0f1c] text-sm sm:text-base font-bold leading-normal tracking-[0.015em] w-full max-w-[320px] sm:max-w-[480px]"
                 >
                   <span className="truncate">Save Profile</span>
                 </button>
@@ -527,10 +531,10 @@ export default function EditProfile({ session }) {
             </div>
 
             {/* Profile Photo Upload */}
-            <div className="flex flex-col p-4">
-              <div className="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-6 py-14">
+            <div className="flex flex-col p-3 sm:p-4">
+              <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                 <div className="flex max-w-[480px] flex-col items-center gap-2">
-                  <p className="text-[#0d0f1c] text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Profile Photo</p>
+                  <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Profile Photo</p>
                   <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a JPG or PNG image</p>
                 </div>
                 <input
@@ -543,7 +547,7 @@ export default function EditProfile({ session }) {
                 />
                 <label
                   htmlFor="profile-photo"
-                  className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                  className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
                     uploadStates.profile_photo.uploading 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                       : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
@@ -558,11 +562,11 @@ export default function EditProfile({ session }) {
             </div>
 
             {/* Basic Info Fields */}
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+            <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
               <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Name</p>
+                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Name</p>
                 <input
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                   value={profile.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="Enter your name"
@@ -570,11 +574,11 @@ export default function EditProfile({ session }) {
               </label>
             </div>
 
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+            <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
               <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Title</p>
+                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Title</p>
                 <input
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                   value={profile.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="e.g., Instructional Designer"
@@ -582,11 +586,11 @@ export default function EditProfile({ session }) {
               </label>
             </div>
 
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+            <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
               <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Bio</p>
+                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Bio</p>
                 <textarea
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-36 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                   value={profile.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Creating engaging and effective learning experiences"
@@ -596,75 +600,75 @@ export default function EditProfile({ session }) {
 
             {/* Tab Navigation */}
             <div className="pb-3">
-                <div className="flex border-b border-[#ced3e9] px-4 gap-8">
-                    <a
-                    href="#"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setActiveTab('about');
-                    }}
-                    className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-3 transition-colors duration-200 ${
-                        activeTab === 'about' 
-                        ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                        : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                    }`}
-                    >
-                    <p className="text-sm font-bold leading-normal tracking-[0.015em]">About Me</p>
-                    </a>
-                    <a
-                    href="#"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setActiveTab('projects');
-                    }}
-                    className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-3 transition-colors duration-200 ${
-                        activeTab === 'projects' 
-                        ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                        : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                    }`}
-                    >
-                    <p className="text-sm font-bold leading-normal tracking-[0.015em]">Projects</p>
-                    </a>
-                    <a
-                    href="#"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setActiveTab('skills');
-                    }}
-                    className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-3 transition-colors duration-200 ${
-                        activeTab === 'skills' 
-                        ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                        : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                    }`}
-                    >
-                    <p className="text-sm font-bold leading-normal tracking-[0.015em]">Skills</p>
-                    </a>
-                    <a
-                    href="#"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setActiveTab('experience');
-                    }}
-                    className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-3 transition-colors duration-200 ${
-                        activeTab === 'experience' 
-                        ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                        : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                    }`}
-                    >
-                    <p className="text-sm font-bold leading-normal tracking-[0.015em]">Experience</p>
-                    </a>
-                </div>
+              <div className="flex border-b border-[#ced3e9] px-3 sm:px-4 gap-4 sm:gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab('about');
+                  }}
+                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
+                    activeTab === 'about' 
+                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
+                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
+                  }`}
+                >
+                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">About Me</p>
+                </a>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab('projects');
+                  }}
+                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
+                    activeTab === 'projects' 
+                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
+                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
+                  }`}
+                >
+                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Projects</p>
+                </a>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab('skills');
+                  }}
+                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
+                    activeTab === 'skills' 
+                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
+                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
+                  }`}
+                >
+                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Skills</p>
+                </a>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab('experience');
+                  }}
+                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
+                    activeTab === 'experience' 
+                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
+                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
+                  }`}
+                >
+                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Experience</p>
+                </a>
+              </div>
             </div>
 
             {/* Tab Content */}
             {activeTab === 'about' && (
               <>
-                <h2 className="text-[#0d0f1c] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">About Me</h2>
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">About Me</h2>
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Edit About Me</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Edit About Me</p>
                     <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-36 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.about_me}
                       onChange={(e) => handleInputChange('about_me', e.target.value)}
                       placeholder="Tell us more about yourself, your background, and what drives you in instructional design..."
@@ -676,14 +680,14 @@ export default function EditProfile({ session }) {
 
             {activeTab === 'projects' && (
               <>
-                <h2 className="text-[#0d0f1c] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Projects</h2>
+                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">Projects</h2>
                 
                 {/* Project 1 */}
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Project 1 Title</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 1 Title</p>
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.project1_title}
                       onChange={(e) => handleInputChange('project1_title', e.target.value)}
                       placeholder="Enter project title"
@@ -691,11 +695,11 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Project 1 Description</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 1 Description</p>
                     <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-36 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.project1_description}
                       onChange={(e) => handleInputChange('project1_description', e.target.value)}
                       placeholder="Describe your project..."
@@ -704,9 +708,9 @@ export default function EditProfile({ session }) {
                 </div>
 
                 {/* Project Type Selection */}
-                <div className="flex flex-wrap gap-3 p-4">
-                  <label className={`text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-4 h-11 relative cursor-pointer ${
-                    profile.project1_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-3.5' : 'border border-[#ced3e9]'
+                <div className="flex flex-wrap gap-2 sm:gap-3 p-3 sm:p-4">
+                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
+                    profile.project1_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
                     Storyboard
                     <input
@@ -717,8 +721,8 @@ export default function EditProfile({ session }) {
                       onChange={() => handleInputChange('project1_type', 'Storyboard')}
                     />
                   </label>
-                  <label className={`text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-4 h-11 relative cursor-pointer ${
-                    profile.project1_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-3.5' : 'border border-[#ced3e9]'
+                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
+                    profile.project1_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
                     e-Learning
                     <input
@@ -732,10 +736,10 @@ export default function EditProfile({ session }) {
                 </div>
 
                 {/* Project 1 Folder Upload */}
-                <div className="flex flex-col p-4">
-                  <div className="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-6 py-14">
+                <div className="flex flex-col p-3 sm:p-4">
+                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                     <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Project Folder</p>
+                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Project Folder</p>
                       <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a folder</p>
                     </div>
                     <input
@@ -748,7 +752,7 @@ export default function EditProfile({ session }) {
                     />
                     <label
                       htmlFor="project1-folder"
-                      className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
                         uploadStates.project1_folder.uploading 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                           : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
@@ -763,10 +767,10 @@ export default function EditProfile({ session }) {
                 </div>
 
                 {/* Project 1 Thumbnail Upload */}
-                <div className="flex flex-col p-4">
-                  <div className="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-6 py-14">
+                <div className="flex flex-col p-3 sm:p-4">
+                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                     <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Thumbnail</p>
+                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Thumbnail</p>
                       <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a JPG or PNG image</p>
                     </div>
                     <input
@@ -779,7 +783,7 @@ export default function EditProfile({ session }) {
                     />
                     <label
                       htmlFor="project1-thumbnail"
-                      className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
                         uploadStates.project1_thumbnail.uploading 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                           : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
@@ -795,7 +799,7 @@ export default function EditProfile({ session }) {
 
                 {/* Project 1 Thumbnail Preview */}
                 {profile.project1_thumbnail_url && (
-                  <div className="flex w-full grow bg-[#f8f9fc] p-4">
+                  <div className="flex w-full grow bg-[#f8f9fc] p-3 sm:p-4">
                     <div className="w-full gap-1 overflow-hidden bg-[#f8f9fc] aspect-[3/2] rounded-xl flex">
                       <div
                         className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
@@ -806,11 +810,11 @@ export default function EditProfile({ session }) {
                 )}
 
                 {/* Project 2 - Same structure as Project 1 */}
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Project 2 Title</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 2 Title</p>
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.project2_title}
                       onChange={(e) => handleInputChange('project2_title', e.target.value)}
                       placeholder="Enter project title"
@@ -818,11 +822,11 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Project 2 Description</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 2 Description</p>
                     <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-36 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.project2_description}
                       onChange={(e) => handleInputChange('project2_description', e.target.value)}
                       placeholder="Describe your project..."
@@ -831,9 +835,9 @@ export default function EditProfile({ session }) {
                 </div>
 
                 {/* Project 2 Type Selection */}
-                <div className="flex flex-wrap gap-3 p-4">
-                  <label className={`text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-4 h-11 relative cursor-pointer ${
-                    profile.project2_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-3.5' : 'border border-[#ced3e9]'
+                <div className="flex flex-wrap gap-2 sm:gap-3 p-3 sm:p-4">
+                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
+                    profile.project2_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
                     Storyboard
                     <input
@@ -844,8 +848,8 @@ export default function EditProfile({ session }) {
                       onChange={() => handleInputChange('project2_type', 'Storyboard')}
                     />
                   </label>
-                  <label className={`text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-4 h-11 relative cursor-pointer ${
-                    profile.project2_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-3.5' : 'border border-[#ced3e9]'
+                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
+                    profile.project2_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
                     e-Learning
                     <input
@@ -859,10 +863,10 @@ export default function EditProfile({ session }) {
                 </div>
 
                 {/* Project 2 Uploads - Similar to Project 1 */}
-                <div className="flex flex-col p-4">
-                  <div className="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-6 py-14">
+                <div className="flex flex-col p-3 sm:p-4">
+                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                     <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Project Folder</p>
+                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Project Folder</p>
                       <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a folder</p>
                     </div>
                     <input
@@ -875,7 +879,7 @@ export default function EditProfile({ session }) {
                     />
                     <label
                       htmlFor="project2-folder"
-                      className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
                         uploadStates.project2_folder.uploading 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                           : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
@@ -889,10 +893,10 @@ export default function EditProfile({ session }) {
                   {renderUploadProgress('project2_folder')}
                 </div>
 
-                <div className="flex flex-col p-4">
-                  <div className="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-6 py-14">
+                <div className="flex flex-col p-3 sm:p-4">
+                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                     <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Thumbnail</p>
+                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Thumbnail</p>
                       <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a JPG or PNG image</p>
                     </div>
                     <input
@@ -905,7 +909,7 @@ export default function EditProfile({ session }) {
                     />
                     <label
                       htmlFor="project2-thumbnail"
-                      className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
                         uploadStates.project2_thumbnail.uploading 
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                           : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
@@ -921,7 +925,7 @@ export default function EditProfile({ session }) {
 
                 {/* Project 2 Thumbnail Preview */}
                 {profile.project2_thumbnail_url && (
-                  <div className="flex w-full grow bg-[#f8f9fc] p-4">
+                  <div className="flex w-full grow bg-[#f8f9fc] p-3 sm:p-4">
                     <div className="w-full gap-1 overflow-hidden bg-[#f8f9fc] aspect-[3/2] rounded-xl flex">
                       <div
                         className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
@@ -935,15 +939,15 @@ export default function EditProfile({ session }) {
 
             {activeTab === 'skills' && (
               <>
-                <h2 className="text-[#0d0f1c] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Skills</h2>
+                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">Skills</h2>
                 
                 {/* Skills Input with Dropdown */}
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1 relative" ref={skillsInputRef}>
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Add Skills</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Add Skills</p>
                     <input
                       type="text"
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={skillsInput}
                       onChange={handleSkillsInputChange}
                       onKeyDown={handleSkillsInputKeyDown}
@@ -957,7 +961,7 @@ export default function EditProfile({ session }) {
                         {filteredSkills.slice(0, 20).map((skill, index) => (
                           <div
                             key={index}
-                            className="px-4 py-3 hover:bg-[#f8f9fc] cursor-pointer text-sm text-[#0d0f1c] border-b border-[#ced3e9] last:border-b-0 flex items-center justify-between"
+                            className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-[#f8f9fc] cursor-pointer text-xs sm:text-sm text-[#0d0f1c] border-b border-[#ced3e9] last:border-b-0 flex items-center justify-between"
                             onClick={() => handleSkillSelect(skill)}
                           >
                             <span>{skill}</span>
@@ -965,12 +969,12 @@ export default function EditProfile({ session }) {
                           </div>
                         ))}
                         {filteredSkills.length > 20 && (
-                          <div className="px-4 py-2 text-xs text-[#47579e] italic bg-[#f8f9fc]">
+                          <div className="px-3 sm:px-4 py-2 text-xs text-[#47579e] italic bg-[#f8f9fc]">
                             {filteredSkills.length - 20} more results... Keep typing to narrow down
                           </div>
                         )}
                         {filteredSkills.length === 0 && skillsInput.trim() && (
-                          <div className="px-4 py-3 text-sm text-[#47579e] italic">
+                          <div className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-[#47579e] italic">
                             Press Enter to add "{skillsInput.trim()}" as a custom skill
                           </div>
                         )}
@@ -981,15 +985,15 @@ export default function EditProfile({ session }) {
 
                 {/* Selected Skills Display */}
                 {selectedSkills.length > 0 && (
-                  <div className="px-4 py-3">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-3">Selected Skills ({selectedSkills.length})</p>
+                  <div className="px-3 sm:px-4 py-3">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-3">Selected Skills ({selectedSkills.length})</p>
                     <div className="flex gap-2 flex-wrap max-h-48 overflow-y-auto">
                       {selectedSkills.map((skill, index) => (
                         <div 
                           key={index} 
-                          className="flex items-center justify-center gap-x-2 rounded-full bg-[#e6e9f4] pl-4 pr-2 py-2 group hover:bg-[#d1d6ed] transition-colors"
+                          className="flex items-center justify-center gap-x-2 rounded-full bg-[#e6e9f4] pl-3 sm:pl-4 pr-2 py-1.5 sm:py-2 group hover:bg-[#d1d6ed] transition-colors"
                         >
-                          <p className="text-[#0d0f1c] text-sm font-medium leading-normal">{skill}</p>
+                          <p className="text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal">{skill}</p>
                           <button
                             onClick={() => handleSkillRemove(skill)}
                             className="ml-1 text-[#47579e] hover:text-[#0d0f1c] focus:outline-none p-1 rounded-full hover:bg-[#ced3e9] transition-colors"
@@ -1006,17 +1010,17 @@ export default function EditProfile({ session }) {
                 )}
 
                 {/* Categorized Popular Skills */}
-                <div className="px-4 py-3">
-                  <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-3">Popular Skills by Category</p>
+                <div className="px-3 sm:px-4 py-3">
+                  <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-3">Popular Skills by Category</p>
                   {Object.entries(skillsData.popularSkills).map(([category, skills]) => (
                     <div key={category} className="mb-4">
-                      <h4 className="text-[#47579e] text-sm font-medium mb-2">{category}</h4>
-                      <div className="flex gap-2 flex-wrap">
+                      <h4 className="text-[#47579e] text-xs sm:text-sm font-medium mb-2">{category}</h4>
+                      <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                         {skills.filter(skill => !selectedSkills.includes(skill)).map((skill, index) => (
                           <button
                             key={index}
                             onClick={() => handleSkillSelect(skill)}
-                            className="flex items-center justify-center rounded-full border border-[#ced3e9] bg-white hover:bg-[#f8f9fc] hover:border-[#4264fa] px-3 py-1.5 transition-all duration-200"
+                            className="flex items-center justify-center rounded-full border border-[#ced3e9] bg-white hover:bg-[#f8f9fc] hover:border-[#4264fa] px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-200"
                           >
                             <span className="text-[#47579e] text-xs font-medium leading-normal">+ {skill}</span>
                           </button>
@@ -1026,21 +1030,8 @@ export default function EditProfile({ session }) {
                   ))}
                 </div>
 
-                {/* Browse All Categories */}
-                <div className="px-4 py-3">
-                  <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-3">Browse All Categories</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(skillsData.categories).map(([category, skills]) => (
-                      <div key={category} className="p-3 border border-[#ced3e9] rounded-xl hover:bg-[#f8f9fc] cursor-pointer">
-                        <h4 className="text-[#0d0f1c] text-sm font-medium mb-1">{category}</h4>
-                        <p className="text-[#47579e] text-xs">{skills.length} skills available</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Skills Help Text */}
-                <div className="px-4 py-2">
+                <div className="px-3 sm:px-4 py-2">
                   <p className="text-[#47579e] text-sm leading-normal">
                     💡 <strong>Pro tip:</strong> Start typing to search from our database of {predefinedSkills.length}+ skills including programming languages, 
                     frameworks, cloud platforms, databases, and more. You can also add custom skills by pressing Enter.
@@ -1051,14 +1042,14 @@ export default function EditProfile({ session }) {
 
             {activeTab === 'experience' && (
               <>
-                <h2 className="text-[#0d0f1c] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Experience</h2>
+                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">Experience</h2>
                 
                 {/* Experience 1 */}
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Experience 1 Title</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Experience 1 Title</p>
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.experience1_title}
                       onChange={(e) => handleInputChange('experience1_title', e.target.value)}
                       placeholder="e.g., Senior Instructional Designer"
@@ -1066,9 +1057,9 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Start Date</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
                     <CustomDatePicker
                       selected={profile.experience1_start_date}
                       onChange={(date) => handleInputChange('experience1_start_date', date)}
@@ -1078,7 +1069,7 @@ export default function EditProfile({ session }) {
                   </label>
                   {!profile.experience1_current && (
                     <label className="flex flex-col min-w-40 flex-1">
-                      <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                      <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
                       <CustomDatePicker
                         selected={profile.experience1_end_date}
                         onChange={(date) => handleInputChange('experience1_end_date', date)}
@@ -1089,7 +1080,7 @@ export default function EditProfile({ session }) {
                     </label>
                   )}
                 </div>
-                <div className="max-w-[480px] px-4 pb-3">
+                <div className="max-w-[480px] px-3 sm:px-4 pb-3">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -1106,16 +1097,16 @@ export default function EditProfile({ session }) {
                         borderColor: profile.experience1_current ? '#4264fa' : '#ced3e9'
                       }}
                     />
-                    <span className="text-[#47579e] text-sm font-medium">Currently working here</span>
+                    <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
                   </label>
                 </div>
 
                 {/* Experience 2 */}
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Experience 2 Title</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Experience 2 Title</p>
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.experience2_title}
                       onChange={(e) => handleInputChange('experience2_title', e.target.value)}
                       placeholder="Enter position title"
@@ -1123,9 +1114,9 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Start Date</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
                     <CustomDatePicker
                       selected={profile.experience2_start_date}
                       onChange={(date) => handleInputChange('experience2_start_date', date)}
@@ -1135,7 +1126,7 @@ export default function EditProfile({ session }) {
                   </label>
                   {!profile.experience2_current && (
                     <label className="flex flex-col min-w-40 flex-1">
-                      <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                      <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
                       <CustomDatePicker
                         selected={profile.experience2_end_date}
                         onChange={(date) => handleInputChange('experience2_end_date', date)}
@@ -1146,7 +1137,7 @@ export default function EditProfile({ session }) {
                     </label>
                   )}
                 </div>
-                <div className="max-w-[480px] px-4 pb-3">
+                <div className="max-w-[480px] px-3 sm:px-4 pb-3">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -1163,16 +1154,16 @@ export default function EditProfile({ session }) {
                         borderColor: profile.experience2_current ? '#4264fa' : '#ced3e9'
                       }}
                     />
-                    <span className="text-[#47579e] text-sm font-medium">Currently working here</span>
+                    <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
                   </label>
                 </div>
 
                 {/* Experience 3 */}
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Experience 3 Title</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Experience 3 Title</p>
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-14 placeholder:text-[#47579e] p-[15px] text-base font-normal leading-normal"
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                       value={profile.experience3_title}
                       onChange={(e) => handleInputChange('experience3_title', e.target.value)}
                       placeholder="Enter position title"
@@ -1180,9 +1171,9 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
-                <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">Start Date</p>
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
                     <CustomDatePicker
                       selected={profile.experience3_start_date}
                       onChange={(date) => handleInputChange('experience3_start_date', date)}
@@ -1192,7 +1183,7 @@ export default function EditProfile({ session }) {
                   </label>
                   {!profile.experience3_current && (
                     <label className="flex flex-col min-w-40 flex-1">
-                      <p className="text-[#0d0f1c] text-base font-medium leading-normal pb-2">End Date</p>
+                      <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
                       <CustomDatePicker
                         selected={profile.experience3_end_date}
                         onChange={(date) => handleInputChange('experience3_end_date', date)}
@@ -1203,7 +1194,7 @@ export default function EditProfile({ session }) {
                     </label>
                   )}
                 </div>
-                <div className="max-w-[480px] px-4 pb-3">
+                <div className="max-w-[480px] px-3 sm:px-4 pb-3">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -1220,7 +1211,7 @@ export default function EditProfile({ session }) {
                         borderColor: profile.experience3_current ? '#4264fa' : '#ced3e9'
                       }}
                     />
-                    <span className="text-[#47579e] text-sm font-medium">Currently working here</span>
+                    <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
                   </label>
                 </div>
               </>

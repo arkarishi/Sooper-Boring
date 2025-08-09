@@ -337,7 +337,7 @@ function SectionCards({ title, items }) {
         {title}
       </h2>
 
-      {/* Mobile: Stack cards vertically with transparent background */}
+      {/* Mobile: Stack cards vertically with responsive images */}
       <div className="block sm:hidden space-y-4">
         {items.map((item, idx) => (
           <Link
@@ -345,18 +345,16 @@ function SectionCards({ title, items }) {
             to={item.link}
             className="block bg-transparent rounded-xl hover:bg-gray-100 hover:bg-opacity-30 transition-all"
           >
-            <div className="flex gap-4 p-4">
+            <div className="flex flex-col gap-3 p-3">
               <div
-                //className="w-20 h-20 flex-shrink-0 bg-center bg-cover rounded-lg shadow-md"
-                //className="w-full max-w-md aspect-[5/3] bg-center bg-cover rounded-lg shadow-md"
-                className="w-[500px] h-[300px] bg-center bg-cover rounded-lg shadow-md"
+                className="w-full aspect-[16/9] bg-center bg-cover rounded-lg shadow-md"
                 style={{
                   backgroundImage: `url(${item.image || placeholder})`,
                   backgroundColor: "#f3f4f6",
                 }}
               />
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold text-gray-800 mb-1 line-clamp-1">
+                <h3 className="text-base font-bold text-gray-800 mb-1 line-clamp-2">
                   {item.title}
                 </h3>
                 {item.company && (
@@ -365,7 +363,7 @@ function SectionCards({ title, items }) {
                     {item.location && <> · {item.location}</>}
                   </div>
                 )}
-                <p className="text-sm text-gray-500 line-clamp-2">
+                <p className="text-sm text-gray-500 line-clamp-3">
                   {item.desc}
                 </p>
               </div>

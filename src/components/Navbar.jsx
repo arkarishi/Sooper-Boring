@@ -185,7 +185,7 @@ function SearchDropdown({ search, setSearch, onItemClick }) {
         onChange={(e) => setSearch(e.target.value)}
         onFocus={() => search.trim().length > 1 && suggestions.length > 0 && setShowDropdown(true)}
         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-        className="px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="px-3 sm:px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
       />
       
       {showDropdown && (
@@ -394,23 +394,13 @@ export default function Navbar({ search, setSearch }) {
 
   return (
     <nav className="bg-white border-b border-gray-200 py-4 px-4 sm:px-8 flex justify-between items-center relative">
-      {/* Left: Logo */}
-      <div className="flex items-center gap-4">
+      {/* Left: Logo only */}
+      <div className="flex items-center">
         <Link to="/" className="text-xl font-bold text-black font-serif tracking-tight">
           Design Hub
         </Link>
-        {/* Hamburger for mobile */}
-        <button
-          className="sm:hidden ml-2 p-2 rounded hover:bg-gray-100"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-          </svg>
-        </button>
         {/* Desktop Nav Links */}
-        <div className="hidden sm:flex gap-6 ml-4 font-serif text-base font-medium">
+        <div className="hidden lg:flex gap-6 ml-8 font-serif text-base font-medium">
           <Link to="/articles" className="text-black hover:text-blue-600">Articles</Link>
           <Link to="/theories" className="text-black hover:text-blue-600">Theories</Link>
           <Link to="/videos" className="text-black hover:text-blue-600">Videos</Link>
@@ -422,19 +412,31 @@ export default function Navbar({ search, setSearch }) {
         </div>
       </div>
       
-      {/* Right: Search + Auth (desktop) */}
-      <div className="hidden sm:flex items-center gap-4">
+      {/* Right: Search + Hamburger + Auth */}
+      <div className="flex items-center gap-2 sm:gap-4">
         {!isDashboard && (
-          <SearchDropdown 
-            search={search} 
-            setSearch={setSearch} 
-            onItemClick={handleSearchItemClick}
-          />
+          <div className="hidden xs:block">
+            <SearchDropdown 
+              search={search} 
+              setSearch={setSearch} 
+              onItemClick={handleSearchItemClick}
+            />
+          </div>
         )}
+        {/* Hamburger for mobile - positioned before profile */}
+        <button
+          className="lg:hidden p-2 rounded hover:bg-gray-100"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+          </svg>
+        </button>
         {user ? (
           <ProfileDropdown user={user} onLogout={handleLogout} />
         ) : (
-          <Link to="/auth" className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">
+          <Link to="/auth" className="bg-blue-600 text-white px-3 sm:px-4 py-1 rounded hover:bg-blue-700 text-sm sm:text-base">
             Login/Sign Up
           </Link>
         )}
@@ -442,7 +444,7 @@ export default function Navbar({ search, setSearch }) {
       
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="absolute top-full left-0 w-full bg-white border-b border-gray-200 z-50 flex flex-col sm:hidden">
+        <div className="absolute top-full left-0 w-full bg-white border-b border-gray-200 z-50 flex flex-col lg:hidden">
           <div className="flex flex-col gap-2 py-3 px-4 font-serif text-base font-medium">
             <Link to="/articles" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Articles</Link>
             <Link to="/theories" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>Theories</Link>
@@ -456,29 +458,13 @@ export default function Navbar({ search, setSearch }) {
               <Link to="/profile" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>My Profile</Link>
             )}
             {!isDashboard && (
-              <div className="mt-2">
+              <div className="mt-2 xs:hidden">
                 <SearchDropdown 
                   search={search} 
                   setSearch={setSearch} 
                   onItemClick={handleSearchItemClick}
                 />
               </div>
-            )}
-            {user ? (
-              <button
-                onClick={() => { handleLogout(); setMenuOpen(false); }}
-                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 mt-2"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link
-                to="/auth"
-                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 mt-2"
-                onClick={() => setMenuOpen(false)}
-              >
-                Login/Sign Up
-              </Link>
             )}
           </div>
         </div>
