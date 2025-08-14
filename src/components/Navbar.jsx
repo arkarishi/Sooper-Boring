@@ -391,6 +391,8 @@ export default function Navbar({ search, setSearch }) {
   };
 
   const isDashboard = location.pathname.startsWith('/dashboard');
+  const isAuth = location.pathname === '/auth';
+  const shouldHideSearch = isDashboard || isAuth;
 
   return (
     <nav className="bg-white border-b border-gray-200 py-4 px-4 sm:px-8 flex justify-between items-center relative">
@@ -414,8 +416,9 @@ export default function Navbar({ search, setSearch }) {
       
       {/* Right: Search + Hamburger + Auth */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {!isDashboard && (
-          <div className="hidden xs:block">
+        {/* Search bar - hidden on dashboard and auth pages */}
+        {!shouldHideSearch && (
+          <div className="hidden sm:block">
             <SearchDropdown 
               search={search} 
               setSearch={setSearch} 
@@ -457,8 +460,9 @@ export default function Navbar({ search, setSearch }) {
             {user && (
               <Link to="/profile" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>My Profile</Link>
             )}
-            {!isDashboard && (
-              <div className="mt-2 xs:hidden">
+            {/* Mobile search - hidden on dashboard and auth pages */}
+            {!shouldHideSearch && (
+              <div className="mt-2 sm:hidden">
                 <SearchDropdown 
                   search={search} 
                   setSearch={setSearch} 

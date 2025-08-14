@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "./utils/supabaseClient";
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from './utils/supabaseClient';
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -23,39 +23,52 @@ import EditProfile from "./pages/EditProfile";
 import DetailProfile from "./pages/DetailProfile";
 
 function App() {
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      authListener?.subscription.unsubscribe();
+    // Get initial session
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setLoading(false); // Set loading to false after checking
     };
+
+    getSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  // Show loading while checking auth state
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <Router>
       <ScrollToTop />
       <div className="w-screen min-h-screen flex flex-col w-full bg-neutral-50">
-        <Navbar search={search} setSearch={setSearch} session={session} />
+        <Navbar search={search} setSearch={setSearch} session={user} />
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
             <Route path="/articles" element={<Articles search={search} />} />
             <Route path="/articles/:id" element={<ArticleDetail />} />
             <Route
               path="/dashboard"
               element={
-                session ? (
-                  <Dashboard session={session} />
+                user ? (
+                  <Dashboard user={user} />
                 ) : (
                   <Navigate to="/auth" replace />
                 )
@@ -72,8 +85,8 @@ function App() {
             <Route 
               path="/edit-profile" 
               element={
-                session ? (
-                  <EditProfile session={session} />
+                user ? (
+                  <EditProfile session={{ user }} />
                 ) : (
                   <Navigate to="/auth" replace />
                 )
@@ -82,8 +95,8 @@ function App() {
             <Route 
               path="/profile" 
               element={
-                session ? (
-                  <DetailProfile session={session} />
+                user ? (
+                  <DetailProfile session={{ user }} />
                 ) : (
                   <Navigate to="/auth" replace />
                 )
@@ -91,7 +104,7 @@ function App() {
             />
             <Route 
               path="/profile/:id" 
-              element={<DetailProfile session={session} />} 
+              element={<DetailProfile session={user} />} 
             />
           </Routes>
         </main>

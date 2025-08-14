@@ -9,6 +9,18 @@ export default function Auth() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    checkUser();
+  }, [navigate]);
+
   // Handle sign in/up
   const handleSubmit = async (e) => {
     e.preventDefault();

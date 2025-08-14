@@ -11,10 +11,11 @@ export default function EditProfile({ session }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
+  // Update the profile state to include the new fields
   const [profile, setProfile] = useState({
     name: '',
     title: '',
-    bio: '',
+    location: '',
     about_me: '',
     profile_photo_url: '',
     
@@ -22,29 +23,40 @@ export default function EditProfile({ session }) {
     project1_title: '',
     project1_description: '',
     project1_type: '',
-    project1_folder_url: '',
+    project1_folder_url: '',    // For e-Learning
+    project1_pdf_url: '',       // For Storyboard - NEW
     project1_thumbnail_url: '',
     
     // Project 2
     project2_title: '',
     project2_description: '',
     project2_type: '',
-    project2_folder_url: '',
+    project2_folder_url: '',    // For e-Learning
+    project2_pdf_url: '',       // For Storyboard - NEW
     project2_thumbnail_url: '',
     
     // Skills
     skills: [],
     
-    // Experience - Now using Date objects
+    // Experience - Now with additional fields
     experience1_title: '',
+    experience1_company: '',
+    experience1_location: '',
+    experience1_description: '',
     experience1_start_date: null,
     experience1_end_date: null,
     experience1_current: false,
     experience2_title: '',
+    experience2_company: '',
+    experience2_location: '',
+    experience2_description: '',
     experience2_start_date: null,
     experience2_end_date: null,
     experience2_current: false,
     experience3_title: '',
+    experience3_company: '',
+    experience3_location: '',
+    experience3_description: '',
     experience3_start_date: null,
     experience3_end_date: null,
     experience3_current: false
@@ -58,12 +70,18 @@ export default function EditProfile({ session }) {
   const skillsInputRef = useRef(null);
   const [error, setError] = useState(null);
   
+  // Add state for form persistence
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [initialProfile, setInitialProfile] = useState(null);
+  
   // Upload states
   const [uploadStates, setUploadStates] = useState({
     profile_photo: { uploading: false, progress: 0 },
     project1_folder: { uploading: false, progress: 0, files: [] },
+    project1_pdf: { uploading: false, progress: 0 },      // NEW
     project1_thumbnail: { uploading: false, progress: 0 },
     project2_folder: { uploading: false, progress: 0, files: [] },
+    project2_pdf: { uploading: false, progress: 0 },      // NEW
     project2_thumbnail: { uploading: false, progress: 0 }
   });
 
@@ -86,6 +104,27 @@ export default function EditProfile({ session }) {
       navigate('/auth');
     }
   }, [session]);
+
+  // Add effect to track unsaved changes
+  useEffect(() => {
+    if (initialProfile && profile) {
+      const hasChanges = JSON.stringify(profile) !== JSON.stringify(initialProfile);
+      setHasUnsavedChanges(hasChanges);
+    }
+  }, [profile, initialProfile]);
+
+  // Add beforeunload event listener to warn about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const fetchProfile = async (currentUser) => {
     if (!currentUser) return;
@@ -113,9 +152,14 @@ export default function EditProfile({ session }) {
         };
         
         setProfile(parsedProfile);
+        setInitialProfile(JSON.parse(JSON.stringify(parsedProfile))); // Deep copy for comparison
+        
         if (data.skills && Array.isArray(data.skills)) {
           setSelectedSkills(data.skills);
         }
+      } else {
+        // Set initial profile as empty profile for new users
+        setInitialProfile(JSON.parse(JSON.stringify(profile)));
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -130,7 +174,52 @@ export default function EditProfile({ session }) {
       ...prev,
       [field]: value
     }));
+    
+    // Mark as having unsaved changes
+    setHasUnsavedChanges(true);
   };
+
+  // Add auto-save functionality (optional)
+  const autoSaveProfile = async () => {
+    if (!user || !hasUnsavedChanges) return;
+    
+    try {
+      const profileData = {
+        ...profile,
+        skills: selectedSkills,
+        id: user.id,
+        email: user.email,
+        updated_at: new Date().toISOString(),
+        // Format dates for storage
+        experience1_start_date: formatDateForStorage(profile.experience1_start_date),
+        experience1_end_date: formatDateForStorage(profile.experience1_end_date),
+        experience2_start_date: formatDateForStorage(profile.experience2_start_date),
+        experience2_end_date: formatDateForStorage(profile.experience2_end_date),
+        experience3_start_date: formatDateForStorage(profile.experience3_start_date),
+        experience3_end_date: formatDateForStorage(profile.experience3_end_date)
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(profileData, { onConflict: 'id' });
+
+      if (!error) {
+        setInitialProfile(JSON.parse(JSON.stringify(profile)));
+        setHasUnsavedChanges(false);
+        console.log('Auto-saved profile');
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+  };
+
+  // Auto-save every 30 seconds if there are unsaved changes
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      const autoSaveTimer = setTimeout(autoSaveProfile, 30000);
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [hasUnsavedChanges, profile]);
 
   const updateUploadState = (field, updates) => {
     setUploadStates(prev => ({
@@ -379,11 +468,30 @@ export default function EditProfile({ session }) {
 
       if (error) throw error;
       
+      // Update initial profile state and clear unsaved changes
+      setInitialProfile(JSON.parse(JSON.stringify(profile)));
+      setHasUnsavedChanges(false);
+      
       alert('Profile saved successfully!');
       navigate('/profile');
     } catch (error) {
       console.error('Error saving profile:', error);
       setError(`Failed to save profile: ${error.message}`);
+    }
+  };
+
+  // Enhanced tab switching with unsaved changes warning
+  const handleTabSwitch = (newTab) => {
+    if (hasUnsavedChanges) {
+      const confirmSwitch = window.confirm(
+        'You have unsaved changes. Do you want to switch tabs? Your changes will be auto-saved.'
+      );
+      if (confirmSwitch) {
+        autoSaveProfile(); // Auto-save before switching
+        setActiveTab(newTab);
+      }
+    } else {
+      setActiveTab(newTab);
     }
   };
 
@@ -501,6 +609,16 @@ export default function EditProfile({ session }) {
         <div className="px-4 sm:px-6 md:px-8 lg:px-16 xl:px-40 flex flex-1 justify-center py-4 sm:py-5">
           <div className="layout-content-container flex flex-col max-w-[480px] sm:max-w-[600px] md:max-w-[720px] lg:max-w-[960px] flex-1 w-full">
             
+            {/* Unsaved Changes Indicator */}
+            {hasUnsavedChanges && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="text-yellow-800 text-sm">You have unsaved changes. They will be auto-saved in 30 seconds.</span>
+              </div>
+            )}
+
             {/* Profile Header */}
             <div className="flex p-3 sm:p-4">
               <div className="flex w-full flex-col gap-3 sm:gap-4 items-center">
@@ -517,15 +635,21 @@ export default function EditProfile({ session }) {
                       {profile.title || 'Your Title'}
                     </p>
                     <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal text-center">
-                      {profile.bio || 'Your Bio'}
+                      {profile.location || 'Your Location'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={saveProfile}
-                  className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 bg-[#e6e9f4] text-[#0d0f1c] text-sm sm:text-base font-bold leading-normal tracking-[0.015em] w-full max-w-[320px] sm:max-w-[480px]"
+                  className={`flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] w-full max-w-[320px] sm:max-w-[480px] ${
+                    hasUnsavedChanges 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                  }`}
                 >
-                  <span className="truncate">Save Profile</span>
+                  <span className="truncate">
+                    {hasUnsavedChanges ? 'Save Changes' : 'Save Profile'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -588,24 +712,24 @@ export default function EditProfile({ session }) {
 
             <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
               <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Bio</p>
-                <textarea
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                  value={profile.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder="Creating engaging and effective learning experiences"
+                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
+                <input
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                  value={profile.location}
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  placeholder="e.g., New York, NY"
                 />
               </label>
             </div>
 
-            {/* Tab Navigation */}
+            {/* Tab Navigation - Updated with enhanced tab switching */}
             <div className="pb-3">
               <div className="flex border-b border-[#ced3e9] px-3 sm:px-4 gap-4 sm:gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
                 <a
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    setActiveTab('about');
+                    handleTabSwitch('about');
                   }}
                   className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
                     activeTab === 'about' 
@@ -619,7 +743,7 @@ export default function EditProfile({ session }) {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    setActiveTab('projects');
+                    handleTabSwitch('projects');
                   }}
                   className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
                     activeTab === 'projects' 
@@ -633,7 +757,7 @@ export default function EditProfile({ session }) {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    setActiveTab('skills');
+                    handleTabSwitch('skills');
                   }}
                   className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
                     activeTab === 'skills' 
@@ -647,7 +771,7 @@ export default function EditProfile({ session }) {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    setActiveTab('experience');
+                    handleTabSwitch('experience');
                   }}
                   className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
                     activeTab === 'experience' 
@@ -660,7 +784,7 @@ export default function EditProfile({ session }) {
               </div>
             </div>
 
-            {/* Tab Content */}
+            {/* Tab Content - All existing content remains the same */}
             {activeTab === 'about' && (
               <>
                 <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">About Me</h2>
@@ -707,66 +831,108 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
-                {/* Project Type Selection */}
+                {/* Project 1 Type Selection - Updated */}
                 <div className="flex flex-wrap gap-2 sm:gap-3 p-3 sm:p-4">
                   <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
                     profile.project1_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
-                    Storyboard
+                    📄 Storyboard (PDF)
                     <input
                       type="radio"
                       className="invisible absolute"
                       name="project1_type"
                       checked={profile.project1_type === 'Storyboard'}
-                      onChange={() => handleInputChange('project1_type', 'Storyboard')}
+                      onChange={() => {
+                        handleInputChange('project1_type', 'Storyboard');
+                        // Clear the opposite field when type changes
+                        handleInputChange('project1_folder_url', '');
+                      }}
                     />
                   </label>
                   <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
                     profile.project1_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
-                    e-Learning
+                    💻 e-Learning (Folder)
                     <input
                       type="radio"
                       className="invisible absolute"
                       name="project1_type"
                       checked={profile.project1_type === 'e-Learning'}
-                      onChange={() => handleInputChange('project1_type', 'e-Learning')}
+                      onChange={() => {
+                        handleInputChange('project1_type', 'e-Learning');
+                        // Clear the opposite field when type changes
+                        handleInputChange('project1_pdf_url', '');
+                      }}
                     />
                   </label>
                 </div>
 
-                {/* Project 1 Folder Upload */}
-                <div className="flex flex-col p-3 sm:p-4">
-                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                    <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Project Folder</p>
-                      <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a folder</p>
+                {/* Conditional Upload Section for Project 1 */}
+                {profile.project1_type === 'e-Learning' && (
+                  <div className="flex flex-col p-3 sm:p-4">
+                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
+                      <div className="flex max-w-[480px] flex-col items-center gap-2">
+                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload e-Learning Project Folder</p>
+                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select the entire project folder containing HTML, CSS, JS files</p>
+                      </div>
+                      <input
+                        type="file"
+                        webkitdirectory=""
+                        onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project1_folder_url')}
+                        className="hidden"
+                        id="project1-folder"
+                        disabled={uploadStates.project1_folder.uploading}
+                      />
+                      <label
+                        htmlFor="project1-folder"
+                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
+                          uploadStates.project1_folder.uploading 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                        }`}
+                      >
+                        <span className="truncate">
+                          {uploadStates.project1_folder.uploading ? 'Uploading...' : '📁 Add e-Learning Folder'}
+                        </span>
+                      </label>
                     </div>
-                    <input
-                      type="file"
-                      webkitdirectory=""
-                      onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project1_folder_url')}
-                      className="hidden"
-                      id="project1-folder"
-                      disabled={uploadStates.project1_folder.uploading}
-                    />
-                    <label
-                      htmlFor="project1-folder"
-                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                        uploadStates.project1_folder.uploading 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                      }`}
-                    >
-                      <span className="truncate">
-                        {uploadStates.project1_folder.uploading ? 'Uploading...' : 'Add Folder'}
-                      </span>
-                    </label>
+                    {renderUploadProgress('project1_folder')}
                   </div>
-                  {renderUploadProgress('project1_folder')}
-                </div>
+                )}
 
-                {/* Project 1 Thumbnail Upload */}
+                {profile.project1_type === 'Storyboard' && (
+                  <div className="flex flex-col p-3 sm:p-4">
+                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
+                      <div className="flex max-w-[480px] flex-col items-center gap-2">
+                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Storyboard PDF</p>
+                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select a PDF file containing your storyboard</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => handleFileUpload(e.target.files[0], 'project-pdfs', 'project1_pdf_url')}
+                        className="hidden"
+                        id="project1-pdf"
+                        disabled={uploadStates.project1_pdf?.uploading}
+                      />
+                      <label
+                        htmlFor="project1-pdf"
+                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
+                          uploadStates.project1_pdf?.uploading 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                        }`}
+                      >
+                        <span className="truncate">
+                          {uploadStates.project1_pdf?.uploading ? 'Uploading...' : '📄 Add PDF Storyboard'}
+                        </span>
+                      </label>
+                    </div>
+                    {renderUploadProgress('project1_pdf')}
+                  </div>
+                )}
+
+                {/* Project 1 Thumbnail Upload - Always show */}
                 <div className="flex flex-col p-3 sm:p-4">
                   <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                     <div className="flex max-w-[480px] flex-col items-center gap-2">
@@ -790,7 +956,7 @@ export default function EditProfile({ session }) {
                       }`}
                     >
                       <span className="truncate">
-                        {uploadStates.project1_thumbnail.uploading ? 'Uploading...' : 'Add Image'}
+                        {uploadStates.project1_thumbnail.uploading ? 'Uploading...' : '🖼️ Add Thumbnail'}
                       </span>
                     </label>
                   </div>
@@ -805,6 +971,23 @@ export default function EditProfile({ session }) {
                         className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
                         style={{backgroundImage: `url("${profile.project1_thumbnail_url}")`}}
                       />
+                    </div>
+                  </div>
+                )}
+
+                {/* File Preview Section for Project 1 */}
+                {(profile.project1_pdf_url || profile.project1_folder_url) && (
+                  <div className="p-3 sm:p-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-green-800 font-medium">File uploaded successfully!</span>
+                      </div>
+                      <p className="text-green-700 text-sm">
+                        {profile.project1_type === 'Storyboard' ? '📄 PDF Storyboard' : '📁 e-Learning Project Folder'} uploaded
+                      </p>
                     </div>
                   </div>
                 )}
@@ -839,60 +1022,101 @@ export default function EditProfile({ session }) {
                   <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
                     profile.project2_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
-                    Storyboard
+                    📄 Storyboard (PDF)
                     <input
                       type="radio"
                       className="invisible absolute"
                       name="project2_type"
                       checked={profile.project2_type === 'Storyboard'}
-                      onChange={() => handleInputChange('project2_type', 'Storyboard')}
+                      onChange={() => {
+                        handleInputChange('project2_type', 'Storyboard');
+                        handleInputChange('project2_folder_url', '');
+                      }}
                     />
                   </label>
                   <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
                     profile.project2_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
                   } text-[#0d0f1c]`}>
-                    e-Learning
+                    💻 e-Learning (Folder)
                     <input
                       type="radio"
                       className="invisible absolute"
                       name="project2_type"
                       checked={profile.project2_type === 'e-Learning'}
-                      onChange={() => handleInputChange('project2_type', 'e-Learning')}
+                      onChange={() => {
+                        handleInputChange('project2_type', 'e-Learning');
+                        handleInputChange('project2_pdf_url', '');
+                      }}
                     />
                   </label>
                 </div>
 
-                {/* Project 2 Uploads - Similar to Project 1 */}
-                <div className="flex flex-col p-3 sm:p-4">
-                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                    <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Project Folder</p>
-                      <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a folder</p>
+                {/* Conditional Upload Section for Project 2 */}
+                {profile.project2_type === 'e-Learning' && (
+                  <div className="flex flex-col p-3 sm:p-4">
+                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
+                      <div className="flex max-w-[480px] flex-col items-center gap-2">
+                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload e-Learning Project Folder</p>
+                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select the entire project folder containing HTML, CSS, JS files</p>
+                      </div>
+                      <input
+                        type="file"
+                        webkitdirectory=""
+                        onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project2_folder_url')}
+                        className="hidden"
+                        id="project2-folder"
+                        disabled={uploadStates.project2_folder.uploading}
+                      />
+                      <label
+                        htmlFor="project2-folder"
+                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
+                          uploadStates.project2_folder.uploading 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                        }`}
+                      >
+                        <span className="truncate">
+                          {uploadStates.project2_folder.uploading ? 'Uploading...' : '📁 Add e-Learning Folder'}
+                        </span>
+                      </label>
                     </div>
-                    <input
-                      type="file"
-                      webkitdirectory=""
-                      onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project2_folder_url')}
-                      className="hidden"
-                      id="project2-folder"
-                      disabled={uploadStates.project2_folder.uploading}
-                    />
-                    <label
-                      htmlFor="project2-folder"
-                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                        uploadStates.project2_folder.uploading 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                      }`}
-                    >
-                      <span className="truncate">
-                        {uploadStates.project2_folder.uploading ? 'Uploading...' : 'Add Folder'}
-                      </span>
-                    </label>
+                    {renderUploadProgress('project2_folder')}
                   </div>
-                  {renderUploadProgress('project2_folder')}
-                </div>
+                )}
 
+                {profile.project2_type === 'Storyboard' && (
+                  <div className="flex flex-col p-3 sm:p-4">
+                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
+                      <div className="flex max-w-[480px] flex-col items-center gap-2">
+                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Storyboard PDF</p>
+                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select a PDF file containing your storyboard</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => handleFileUpload(e.target.files[0], 'project-pdfs', 'project2_pdf_url')}
+                        className="hidden"
+                        id="project2-pdf"
+                        disabled={uploadStates.project2_pdf?.uploading}
+                      />
+                      <label
+                        htmlFor="project2-pdf"
+                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
+                          uploadStates.project2_pdf?.uploading 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                        }`}
+                      >
+                        <span className="truncate">
+                          {uploadStates.project2_pdf?.uploading ? 'Uploading...' : '📄 Add PDF Storyboard'}
+                        </span>
+                      </label>
+                    </div>
+                    {renderUploadProgress('project2_pdf')}
+                  </div>
+                )}
+
+                {/* Project 2 Thumbnail Upload */}
                 <div className="flex flex-col p-3 sm:p-4">
                   <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
                     <div className="flex max-w-[480px] flex-col items-center gap-2">
@@ -916,7 +1140,7 @@ export default function EditProfile({ session }) {
                       }`}
                     >
                       <span className="truncate">
-                        {uploadStates.project2_thumbnail.uploading ? 'Uploading...' : 'Add Image'}
+                        {uploadStates.project2_thumbnail.uploading ? 'Uploading...' : '🖼️ Add Thumbnail'}
                       </span>
                     </label>
                   </div>
@@ -931,6 +1155,23 @@ export default function EditProfile({ session }) {
                         className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
                         style={{backgroundImage: `url("${profile.project2_thumbnail_url}")`}}
                       />
+                    </div>
+                  </div>
+                )}
+
+                {/* File Preview Section for Project 2 */}
+                {(profile.project2_pdf_url || profile.project2_folder_url) && (
+                  <div className="p-3 sm:p-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-green-800 font-medium">File uploaded successfully!</span>
+                      </div>
+                      <p className="text-green-700 text-sm">
+                        {profile.project2_type === 'Storyboard' ? '📄 PDF Storyboard' : '📁 e-Learning Project Folder'} uploaded
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1057,6 +1298,46 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
+                {/* Experience 1 - Designation */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
+                    <input
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience1_company}
+                      onChange={(e) => handleInputChange('experience1_company', e.target.value)}
+                      placeholder="e.g., ABC Corp, XYZ University"
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 1 - Location */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
+                    <input
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience1_location}
+                      onChange={(e) => handleInputChange('experience1_location', e.target.value)}
+                      placeholder="e.g., New York, NY"
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 1 - About Me */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
+                    <textarea
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience1_description}
+                      onChange={(e) => handleInputChange('experience1_description', e.target.value)}
+                      placeholder="Describe your responsibilities, achievements, and key projects in this role..."
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 1 - Dates */}
                 <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
                     <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
@@ -1114,6 +1395,46 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
+                {/* Experience 2 - Company */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
+                    <input
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience2_company}
+                      onChange={(e) => handleInputChange('experience2_company', e.target.value)}
+                      placeholder="e.g., ABC Corp, XYZ University"
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 2 - Location */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
+                    <input
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience2_location}
+                      onChange={(e) => handleInputChange('experience2_location', e.target.value)}
+                      placeholder="e.g., New York, NY"
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 2 - Description */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
+                    <textarea
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience2_description}
+                      onChange={(e) => handleInputChange('experience2_description', e.target.value)}
+                      placeholder="Describe your responsibilities, achievements, and key projects in this role..."
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 2 - Dates */}
                 <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
                     <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
@@ -1171,6 +1492,46 @@ export default function EditProfile({ session }) {
                   </label>
                 </div>
 
+                {/* Experience 3 - Company */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
+                    <input
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience3_company}
+                      onChange={(e) => handleInputChange('experience3_company', e.target.value)}
+                      placeholder="e.g., ABC Corp, XYZ University"
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 3 - Location */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
+                    <input
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience3_location}
+                      onChange={(e) => handleInputChange('experience3_location', e.target.value)}
+                      placeholder="e.g., New York, NY"
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 3 - Description */}
+                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
+                  <label className="flex flex-col min-w-40 flex-1">
+                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
+                    <textarea
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                      value={profile.experience3_description}
+                      onChange={(e) => handleInputChange('experience3_description', e.target.value)}
+                      placeholder="Describe your responsibilities, achievements, and key projects in this role..."
+                    />
+                  </label>
+                </div>
+
+                {/* Experience 3 - Dates */}
                 <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
                   <label className="flex flex-col min-w-40 flex-1">
                     <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>

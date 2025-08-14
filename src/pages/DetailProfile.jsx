@@ -7,6 +7,8 @@ export default function DetailProfile({ session }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState('about');
+  const [showFullAbout, setShowFullAbout] = useState(false);
+  const [expandedExperience, setExpandedExperience] = useState({}); // Track expanded state for each experience
   const navigate = useNavigate();
   const { id } = useParams();
   
@@ -86,6 +88,22 @@ export default function DetailProfile({ session }) {
 
   const canEdit = session?.user?.id === profileId;
 
+  // Helper function to truncate text
+  const truncateText = (text, wordLimit = 30) => {
+    if (!text) return '';
+    const words = text.split(' ');
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(' ') + '...';
+  };
+
+  // Toggle experience description expansion
+  const toggleExperienceExpansion = (experienceNum) => {
+    setExpandedExperience(prev => ({
+      ...prev,
+      [experienceNum]: !prev[experienceNum]
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center px-4">
@@ -145,7 +163,7 @@ export default function DetailProfile({ session }) {
                       {profile.title || 'No Title Set'}
                     </p>
                     <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal text-center mt-1">
-                      {profile.bio || 'No Bio Set'}
+                      {profile.location || 'No Location Set'}
                     </p>
                   </div>
                 </div>
@@ -232,22 +250,26 @@ export default function DetailProfile({ session }) {
             {/* Single Scrollable Content */}
             <div className="space-y-8 sm:space-y-12">
               
-              {/* About Me Section */}
+              {/* About Me Section - Removed Read More functionality */}
               <section id="about" className="px-3 sm:px-4 scroll-mt-24">
                 <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] mb-3 sm:mb-4">About Me</h2>
-                <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal">
-                  {profile.about_me || 'No information provided yet.'}
-                </p>
+                {profile.about_me ? (
+                  <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal whitespace-pre-wrap">
+                    {profile.about_me}
+                  </p>
+                ) : (
+                  <p className="text-[#47579e] text-sm sm:text-base italic">No information provided yet.</p>
+                )}
               </section>
 
-              {/* Projects Section */}
+              {/* Projects Section - Using img tags for better reliability */}
               <section id="projects" className="px-3 sm:px-4 scroll-mt-24">
                 <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-1">Projects</h2>
                 
                 {/* Project 1 */}
                 {(profile.project1_title || profile.project1_description) && (
                   <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-[#ced3e9] rounded-xl">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-stretch justify-between gap-3 sm:gap-4">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-start justify-between gap-4 lg:gap-6">
                       <div className="flex flex-1 flex-col gap-3 sm:gap-4 min-w-0">
                         <div className="flex flex-col gap-1 sm:gap-2">
                           <p className="text-[#0d0f1c] text-sm sm:text-base font-bold leading-tight">
@@ -258,30 +280,56 @@ export default function DetailProfile({ session }) {
                           </p>
                           {profile.project1_type && (
                             <span className="inline-block bg-[#e6e9f4] text-[#0d0f1c] px-2 sm:px-3 py-1 rounded-full text-xs font-medium mt-1 sm:mt-2 w-fit">
-                              {profile.project1_type}
+                              {profile.project1_type === 'Storyboard' ? '📄 Storyboard' : '💻 e-Learning'}
                             </span>
                           )}
                         </div>
-                        {profile.project1_folder_url && (
-                          <button className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit">
-                            <span className="truncate">View Project</span>
+                        
+                        {/* Updated View Project Button Logic */}
+                        {((profile.project1_type === 'e-Learning' && profile.project1_folder_url) || 
+                          (profile.project1_type === 'Storyboard' && profile.project1_pdf_url)) && (
+                          <button 
+                            onClick={() => {
+                              const url = profile.project1_type === 'Storyboard' 
+                                ? profile.project1_pdf_url 
+                                : profile.project1_folder_url;
+                              window.open(url, '_blank');
+                            }}
+                            className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit"
+                          >
+                            <span className="truncate">
+                              {profile.project1_type === 'Storyboard' ? '📄 View PDF' : '💻 View Project'}
+                            </span>
                           </button>
                         )}
                       </div>
+                      
+                      {/* Project 1 Image using img tag */}
                       {profile.project1_thumbnail_url && (
-                        <div
-                          className="w-full sm:w-auto bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-shrink-0 max-w-full sm:max-w-[200px] md:max-w-[250px]"
-                          style={{backgroundImage: `url("${profile.project1_thumbnail_url}")`}}
-                        />
+                        <div className="w-full lg:w-auto flex-shrink-0 max-w-full lg:max-w-[300px] xl:max-w-[350px]">
+                          <img
+                            src={profile.project1_thumbnail_url}
+                            alt={`${profile.project1_title || 'Project 1'} thumbnail`}
+                            className="w-full h-48 sm:h-52 lg:h-44 xl:h-48 object-cover rounded-xl border border-[#ced3e9]"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          {/* Fallback placeholder */}
+                          <div className="w-full h-48 sm:h-52 lg:h-44 xl:h-48 bg-gray-100 rounded-xl border border-[#ced3e9] items-center justify-center hidden">
+                            <span className="text-gray-500 text-sm">Image not available</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Project 2 */}
+                {/* Project 2 - Same structure */}
                 {(profile.project2_title || profile.project2_description) && (
                   <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-[#ced3e9] rounded-xl">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-stretch justify-between gap-3 sm:gap-4">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-start justify-between gap-4 lg:gap-6">
                       <div className="flex flex-1 flex-col gap-3 sm:gap-4 min-w-0">
                         <div className="flex flex-col gap-1 sm:gap-2">
                           <p className="text-[#0d0f1c] text-sm sm:text-base font-bold leading-tight">
@@ -292,21 +340,46 @@ export default function DetailProfile({ session }) {
                           </p>
                           {profile.project2_type && (
                             <span className="inline-block bg-[#e6e9f4] text-[#0d0f1c] px-2 sm:px-3 py-1 rounded-full text-xs font-medium mt-1 sm:mt-2 w-fit">
-                              {profile.project2_type}
+                              {profile.project2_type === 'Storyboard' ? '📄 Storyboard' : '💻 e-Learning'}
                             </span>
                           )}
                         </div>
-                        {profile.project2_folder_url && (
-                          <button className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit">
-                            <span className="truncate">View Project</span>
+                        {/* Updated View Project Logic */}
+                        {((profile.project2_type === 'e-Learning' && profile.project2_folder_url) || 
+                          (profile.project2_type === 'Storyboard' && profile.project2_pdf_url)) && (
+                          <button 
+                            onClick={() => {
+                              const url = profile.project2_type === 'Storyboard' 
+                                ? profile.project2_pdf_url 
+                                : profile.project2_folder_url;
+                              window.open(url, '_blank');
+                            }}
+                            className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit"
+                          >
+                            <span className="truncate">
+                              {profile.project2_type === 'Storyboard' ? '📄 View PDF' : '💻 View Project'}
+                            </span>
                           </button>
                         )}
                       </div>
+                      
+                      {/* Project 2 Image using img tag */}
                       {profile.project2_thumbnail_url && (
-                        <div
-                          className="w-full sm:w-auto bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-shrink-0 max-w-full sm:max-w-[200px] md:max-w-[250px]"
-                          style={{backgroundImage: `url("${profile.project2_thumbnail_url}")`}}
-                        />
+                        <div className="w-full lg:w-auto flex-shrink-0 max-w-full lg:max-w-[300px] xl:max-w-[350px]">
+                          <img
+                            src={profile.project2_thumbnail_url}
+                            alt={`${profile.project2_title || 'Project 2'} thumbnail`}
+                            className="w-full h-48 sm:h-52 lg:h-44 xl:h-48 object-cover rounded-xl border border-[#ced3e9]"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          {/* Fallback placeholder */}
+                          <div className="w-full h-48 sm:h-52 lg:h-44 xl:h-48 bg-gray-100 rounded-xl border border-[#ced3e9] items-center justify-center hidden">
+                            <span className="text-gray-500 text-sm">Image not available</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -317,7 +390,7 @@ export default function DetailProfile({ session }) {
                 )}
               </section>
 
-              {/* Skills Section */}
+              {/* Skills Section - remains the same */}
               <section id="skills" className="px-3 sm:px-4 scroll-mt-24">
                 <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-1">Skills</h2>
                 {profile.skills && profile.skills.length > 0 ? (
@@ -333,17 +406,21 @@ export default function DetailProfile({ session }) {
                 )}
               </section>
 
-              {/* Experience Section */}
+              {/* Experience Section - Updated with View Project button styling */}
               <section id="experience" className="px-3 sm:px-4 scroll-mt-24 pb-8 sm:pb-12">
                 <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-1">Experience</h2>
                 <div className="space-y-3 sm:space-y-4">
                   {[1, 2, 3].map((num) => {
                     const title = profile[`experience${num}_title`];
+                    const company = profile[`experience${num}_company`];
+                    const location = profile[`experience${num}_location`];
+                    const description = profile[`experience${num}_description`];
                     const startDate = profile[`experience${num}_start_date`];
                     const endDate = profile[`experience${num}_end_date`];
                     const isCurrent = profile[`experience${num}_current`];
+                    const isExpanded = expandedExperience[num];
                     
-                    if (!title && !startDate && !endDate) return null;
+                    if (!title && !company && !startDate && !endDate) return null;
                     
                     // Format dates for display
                     const formatDisplayDate = (dateString) => {
@@ -359,7 +436,7 @@ export default function DetailProfile({ session }) {
                     const endFormatted = isCurrent ? 'Present' : formatDisplayDate(endDate);
                     
                     return (
-                      <div key={num} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-[#ced3e9] rounded-xl">
+                      <div key={num} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-[#ced3e9] rounded-xl bg-white">
                         <div className="flex flex-col items-center gap-1 pt-1 flex-shrink-0">
                           <div className="text-[#0d0f1c]">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" className="sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 256 256">
@@ -368,12 +445,41 @@ export default function DetailProfile({ session }) {
                           </div>
                         </div>
                         <div className="flex flex-1 flex-col min-w-0">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-bold leading-normal">
                             {title || 'No title provided'}
                           </p>
-                          <p className="text-[#47579e] text-xs sm:text-base font-normal leading-normal">
+                          {company && (
+                            <p className="text-[#47579e] text-xs sm:text-sm font-medium leading-normal">
+                              {company}
+                            </p>
+                          )}
+                          {location && (
+                            <p className="text-[#47579e] text-xs sm:text-sm font-normal leading-normal">
+                              📍 {location}
+                            </p>
+                          )}
+                          <p className="text-[#47579e] text-xs sm:text-sm font-normal leading-normal">
                             {startFormatted || endFormatted ? `${startFormatted || 'Unknown'} - ${endFormatted || 'Unknown'}` : 'No dates provided'}
                           </p>
+                          
+                          {/* Show description only when expanded */}
+                          {description && isExpanded && (
+                            <div className="mt-2">
+                              <p className="text-[#0d0f1c] text-xs sm:text-sm font-normal leading-normal whitespace-pre-wrap">
+                                {description}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Read More button with same styling as View Project */}
+                          {description && (
+                            <button
+                              onClick={() => toggleExperienceExpansion(num)}
+                              className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit mt-2"
+                            >
+                              <span className="truncate">{isExpanded ? 'Read Less' : 'Read More'}</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
