@@ -57,7 +57,7 @@ function MenuBar({ editor }) {
   );
 }
 
-export default function VideoForm() {
+export default function VideoForm({ editingItem, onSuccess }) {
   const [formData, setFormData] = useState({
     title: "",
     video_url: "",
@@ -65,6 +65,7 @@ export default function VideoForm() {
     body: "",
     category: "",
     tags: "",
+    thumbnail_url: "",
   });
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
@@ -72,6 +73,66 @@ export default function VideoForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploadType, setUploadType] = useState("file"); // "file" or "link"
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Helper function to detect if URL is YouTube
+  const isYouTubeURL = (url) => {
+    return url && (url.includes('youtube.com') || url.includes('youtu.be'));
+  };
+
+  // Helper function to get YouTube thumbnail
+  const getYouTubeThumbnail = (url) => {
+    if (!url) return null;
+    
+    let videoId = null;
+    if (url.includes('youtube.com/watch?v=')) {
+      videoId = url.split('v=')[1]?.split('&')[0];
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    }
+    
+    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+  };
+
+  // Initialize form with editing data
+  useEffect(() => {
+    if (editingItem) {
+      setIsEditing(true);
+      setFormData({
+        title: editingItem.title || "",
+        video_url: editingItem.video_url || "",
+        description: editingItem.description || "",
+        body: editingItem.body || "",
+        category: editingItem.category || "",
+        tags: editingItem.tags ? editingItem.tags.join(", ") : "",
+        thumbnail_url: editingItem.thumbnail_url || "",
+      });
+      
+      // Detect upload type based on existing video_url
+      if (editingItem.video_url && isYouTubeURL(editingItem.video_url)) {
+        setUploadType("link");
+      } else {
+        setUploadType("file");
+      }
+    } else {
+      // ✅ Reset everything when editingItem is null
+      setIsEditing(false);
+      setFormData({
+        title: "",
+        video_url: "",
+        description: "",
+        body: "",
+        category: "",
+        tags: "",
+        thumbnail_url: "",
+      });
+      setUploadType("file");
+      setVideoFile(null);
+      setThumbnailFile(null);
+      setVideoPreview(null);
+      setError(null);
+    }
+  }, [editingItem]);
 
   // TipTap editor for body (full content)
   const editor = useEditor({
@@ -89,10 +150,18 @@ export default function VideoForm() {
   }, [editor, formData.body]);
 
   const inputClass =
-    "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600";
+    "w-full px-4 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    
+    // Auto-detect YouTube thumbnail
+    if (e.target.name === 'video_url' && uploadType === 'link') {
+      const youTubeThumbnail = getYouTubeThumbnail(e.target.value);
+      if (youTubeThumbnail) {
+        setFormData(prev => ({ ...prev, video_url: e.target.value, thumbnail_url: youTubeThumbnail }));
+      }
+    }
   };
 
   const handleFileChange = (e) => {
@@ -115,9 +184,9 @@ export default function VideoForm() {
     setLoading(true);
 
     let video_url = formData.video_url;
-    let thumbnail_url = null;
+    let thumbnail_url = formData.thumbnail_url;
 
-    // If local file, upload video and thumbnail to Supabase Storage
+    // If local file, upload video to Supabase Storage
     if (uploadType === "file" && videoFile) {
       // Upload video
       const fileExt = videoFile.name.split(".").pop();
@@ -135,22 +204,25 @@ export default function VideoForm() {
         .from("videos")
         .getPublicUrl(fileName);
       video_url = publicData.publicUrl;
+    }
 
-      // Upload thumbnail if provided
-      if (thumbnailFile) {
-        const thumbExt = thumbnailFile.name.split(".").pop();
-        const thumbName = `${Date.now()}-thumb-${Math.random()}.${thumbExt}`;
-        const { error: thumbError } = await supabase.storage
-          .from("video-thumbnails")
-          .upload(thumbName, thumbnailFile);
+    // Upload thumbnail if provided (for both file and link types)
+    if (thumbnailFile) {
+      const thumbExt = thumbnailFile.name.split(".").pop();
+      const thumbName = `${Date.now()}-thumb-${Math.random()}.${thumbExt}`;
+      const { error: thumbError } = await supabase.storage
+        .from("video-thumbnails")
+        .upload(thumbName, thumbnailFile);
 
-        if (thumbError) {
-          setError("Thumbnail upload failed: " + thumbError.message);
-          setLoading(false);
-          return;
-        }
-        thumbnail_url = thumbName;
+      if (thumbError) {
+        setError("Thumbnail upload failed: " + thumbError.message);
+        setLoading(false);
+        return;
       }
+      const { data: thumbData } = supabase.storage
+        .from("video-thumbnails")
+        .getPublicUrl(thumbName);
+      thumbnail_url = thumbData.publicUrl;
     }
 
     // Get user (Supabase v2+)
@@ -161,35 +233,83 @@ export default function VideoForm() {
       ? formData.tags.split(",").map(tag => tag.trim()).filter(Boolean)
       : [];
 
-    // Insert video row
-    const { error: insertError } = await supabase.from("videos").insert([
-      {
-        ...formData,
-        video_url,
-        thumbnail_url,
-        author: user?.user_metadata?.full_name || user?.email || "Anonymous",
-        category: formData.category || null,
-        tags: tagsArray.length > 0 ? tagsArray : null,
-        description: formData.description,
-        body: formData.body,
-      }
-    ]);
+    const payload = {
+      title: formData.title,
+      video_url,
+      thumbnail_url,
+      description: formData.description,
+      body: formData.body,
+      category: formData.category || null,
+      tags: tagsArray.length > 0 ? tagsArray : null,
+      author: user?.user_metadata?.full_name || user?.email || "Anonymous",
+    };
+
+    let result;
+    if (isEditing) {
+      // Update existing video
+      result = await supabase
+        .from("videos")
+        .update(payload)
+        .eq("id", editingItem.id);
+    } else {
+      // Insert new video
+      result = await supabase
+        .from("videos")
+        .insert([payload]);
+    }
 
     setLoading(false);
 
-    if (insertError) setError(insertError.message);
-    else {
-      setFormData({ title: "", video_url: "", description: "", body: "", category: "", tags: "" });
+    if (result.error) {
+      setError(result.error.message);
+    } else {
+      // Reset form to create mode
+      setFormData({
+        title: "",
+        video_url: "",
+        description: "",
+        body: "",
+        category: "",
+        tags: "",
+        thumbnail_url: "",
+      });
       setVideoFile(null);
       setThumbnailFile(null);
       setVideoPreview(null);
+      setUploadType("file");
+      setIsEditing(false); // ✅ Reset editing state
       if (editor) editor.commands.clearContent();
+      
+      alert(isEditing ? "Video updated successfully!" : "Video posted successfully!");
+      
+      // ✅ Call onSuccess to clear editingItem in parent component
+      if (onSuccess) onSuccess();
     }
+  };
+
+  const getCurrentThumbnail = () => {
+    if (thumbnailFile) {
+      return URL.createObjectURL(thumbnailFile);
+    }
+    if (formData.thumbnail_url) {
+      return formData.thumbnail_url;
+    }
+    return null;
+  };
+
+  const getCurrentVideo = () => {
+    if (videoPreview) return videoPreview;
+    if (isEditing && formData.video_url && !isYouTubeURL(formData.video_url)) {
+      return formData.video_url;
+    }
+    return null;
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4 max-w-lg mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Post New Video</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">
+        {isEditing ? "Edit Video" : "Post New Video"}
+      </h2>
 
       {/* Upload type dropdown */}
       <div>
@@ -198,10 +318,16 @@ export default function VideoForm() {
           value={uploadType}
           onChange={e => setUploadType(e.target.value)}
           className={inputClass}
+          disabled={isEditing} // Disable changing upload type when editing
         >
           <option value="file">Upload Local Video</option>
           <option value="link">Paste YouTube Link</option>
         </select>
+        {isEditing && (
+          <p className="text-sm text-gray-500 mt-1">
+            Upload type cannot be changed when editing
+          </p>
+        )}
       </div>
 
       <input
@@ -240,6 +366,7 @@ export default function VideoForm() {
         onChange={handleChange}
         className={inputClass}
       />
+
       <input
         type="text"
         name="tags"
@@ -252,49 +379,99 @@ export default function VideoForm() {
       {/* Conditionally render video and thumbnail input */}
       {uploadType === "file" ? (
         <div>
+          <label className="block font-medium text-gray-700 mb-1">
+            {isEditing ? "Upload New Video File (optional)" : "Upload Video File"}
+          </label>
           <input
             type="file"
             accept="video/*"
             onChange={handleFileChange}
             className={inputClass}
-            required={uploadType === "file"}
+            required={uploadType === "file" && !isEditing}
           />
           {/* Video preview */}
-          {videoPreview && (
-            <video
-              src={videoPreview}
-              controls
-              muted
-              className="w-32 h-32 object-cover mt-2 rounded shadow"
-            />
+          {getCurrentVideo() && (
+            <div className="mt-2">
+              <video
+                src={getCurrentVideo()}
+                controls
+                muted
+                className="w-full max-w-sm h-32 object-cover rounded shadow"
+              />
+            </div>
           )}
-          {/* Thumbnail input */}
-          <div className="mt-4">
-            <label className="block font-medium text-gray-700 mb-1">Thumbnail Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailChange}
-              className={inputClass}
-              required
-            />
-          </div>
+          {/* Show existing video filename if editing */}
+          {isEditing && formData.video_url && !videoPreview && !isYouTubeURL(formData.video_url) && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-600">
+                Current video: {formData.video_url.split('/').pop()}
+              </p>
+            </div>
+          )}
         </div>
       ) : (
-        <input
-          type="text"
-          name="video_url"
-          placeholder="Paste YouTube video link"
-          value={formData.video_url}
-          onChange={handleChange}
-          className={inputClass}
-          required={uploadType === "link"}
-        />
+        <div>
+          <input
+            type="text"
+            name="video_url"
+            placeholder="Paste YouTube video link"
+            value={formData.video_url}
+            onChange={handleChange}
+            className={inputClass}
+            required={uploadType === "link"}
+          />
+          {/* YouTube preview */}
+          {uploadType === "link" && formData.video_url && isYouTubeURL(formData.video_url) && (
+            <div className="mt-2">
+              <p className="text-sm text-green-600">✓ YouTube video detected</p>
+              {formData.thumbnail_url && (
+                <img
+                  src={formData.thumbnail_url}
+                  alt="YouTube thumbnail"
+                  className="w-32 h-20 object-cover rounded shadow mt-2"
+                />
+              )}
+            </div>
+          )}
+        </div>
       )}
+
+      {/* Thumbnail input */}
+      <div>
+        <label className="block font-medium text-gray-700 mb-1">
+          {uploadType === "link" ? "Custom Thumbnail (optional - YouTube thumbnail auto-detected)" : 
+           isEditing ? "Upload New Thumbnail (optional)" : "Thumbnail Image"}
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleThumbnailChange}
+          className={inputClass}
+          required={uploadType === "file" && !isEditing && !formData.thumbnail_url}
+        />
+        {/* Thumbnail preview */}
+        {getCurrentThumbnail() && (
+          <div className="mt-2">
+            <img
+              src={getCurrentThumbnail()}
+              alt="Thumbnail preview"
+              className="w-32 h-20 object-cover rounded shadow"
+            />
+          </div>
+        )}
+        {/* Show existing thumbnail info if editing */}
+        {isEditing && formData.thumbnail_url && !thumbnailFile && (
+          <div className="mt-2">
+            <p className="text-sm text-gray-600">
+              Current thumbnail: {formData.thumbnail_url.includes('youtube') ? 'YouTube auto-generated' : 'Custom uploaded'}
+            </p>
+          </div>
+        )}
+      </div>
 
       <button
         type="submit"
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
         disabled={loading}
       >
         {loading ? (
@@ -319,10 +496,10 @@ export default function VideoForm() {
                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
               />
             </svg>
-            Posting...
+            {isEditing ? "Updating..." : "Posting..."}
           </span>
         ) : (
-          "Post Video"
+          isEditing ? "Update Video" : "Post Video"
         )}
       </button>
       {error && <p className="text-red-500 mt-2">{error}</p>}

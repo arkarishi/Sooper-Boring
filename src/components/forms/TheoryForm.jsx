@@ -57,18 +57,44 @@ function MenuBar({ editor }) {
   );
 }
 
-export default function TheoryForm() {
+export default function TheoryForm({ editingItem, onSuccess }) {
   const [formData, setFormData] = useState({
     title: "",
     subtitle: "",
     intro: "",
     content: "",
     image_url: "",
-    created_at: new Date().toISOString(),
   });
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Initialize form with editing data
+  useEffect(() => {
+    if (editingItem) {
+      setIsEditing(true);
+      setFormData({
+        title: editingItem.title || "",
+        subtitle: editingItem.subtitle || "",
+        intro: editingItem.intro || "",
+        content: editingItem.content || "",
+        image_url: editingItem.image_url || "",
+      });
+    } else {
+      // ✅ Reset everything when editingItem is null
+      setIsEditing(false);
+      setFormData({
+        title: "",
+        subtitle: "",
+        intro: "",
+        content: "",
+        image_url: "",
+      });
+      setImageFile(null);
+      setError(null);
+    }
+  }, [editingItem]);
 
   // Tiptap editor setup
   const editor = useEditor({
@@ -86,7 +112,7 @@ export default function TheoryForm() {
   }, [editor, formData.content]);
 
   const inputClass =
-    "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3";
+    "w-full px-4 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3";
 
   const handleChange = (e) => {
     setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -97,17 +123,21 @@ export default function TheoryForm() {
     setImageFile(file);
     if (!file) return;
     setUploading(true);
+    
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
       .from("theory-images")
       .upload(fileName, file);
+      
     if (uploadError) {
       setError(uploadError.message);
       setUploading(false);
       return;
     }
-    setFormData((prev) => ({ ...prev, image_url: fileName }));
+    
+    const { data } = supabase.storage.from("theory-images").getPublicUrl(fileName);
+    setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
     setUploading(false);
   };
 
@@ -121,30 +151,71 @@ export default function TheoryForm() {
     }
 
     const payload = {
-      ...formData,
+      title: formData.title,
+      subtitle: formData.subtitle,
+      intro: formData.intro,
+      content: formData.content,
+      image_url: formData.image_url,
     };
 
-    const { error: insertError } = await supabase.from("theories").insert([payload]);
-    if (insertError) setError(insertError.message);
-    else {
+    let result;
+    if (isEditing) {
+      // Update existing theory
+      result = await supabase
+        .from("theories")
+        .update(payload)
+        .eq("id", editingItem.id);
+    } else {
+      // Insert new theory
+      result = await supabase
+        .from("theories")
+        .insert([payload]);
+    }
+
+    if (result.error) {
+      setError(result.error.message);
+    } else {
+      // Reset form to create mode
       setFormData({
         title: "",
         subtitle: "",
         intro: "",
         content: "",
         image_url: "",
-        created_at: new Date().toISOString(),
       });
       setImageFile(null);
-      if (editor) {
-        editor.commands.clearContent();
-      }
+      setIsEditing(false); // ✅ Reset editing state
+      if (editor) editor.commands.clearContent();
+      
+      alert(isEditing ? "Theory updated successfully!" : "Theory posted successfully!");
+      
+      // ✅ Call onSuccess to clear editingItem in parent component
+      if (onSuccess) onSuccess();
     }
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return supabase.storage.from("theory-images").getPublicUrl(url).data.publicUrl;
+  };
+
+  const getCurrentImage = () => {
+    if (imageFile) {
+      return URL.createObjectURL(imageFile);
+    }
+    if (formData.image_url) {
+      return getImageUrl(formData.image_url);
+    }
+    return null;
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-2 max-w-lg mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Post a New Theory</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">
+        {isEditing ? "Edit Theory" : "Post a New Theory"}
+      </h2>
+      
       <input
         type="text"
         name="title"
@@ -154,6 +225,7 @@ export default function TheoryForm() {
         className={inputClass}
         required
       />
+      
       <input
         type="text"
         name="subtitle"
@@ -162,6 +234,7 @@ export default function TheoryForm() {
         onChange={handleChange}
         className={inputClass}
       />
+      
       <textarea
         name="intro"
         placeholder="Short Introduction / Summary"
@@ -181,7 +254,9 @@ export default function TheoryForm() {
       </div>
 
       <div>
-        <label className="block font-medium text-gray-700 mb-1">Upload Image</label>
+        <label className="block font-medium text-gray-700 mb-1">
+          {isEditing ? "Upload New Image (optional)" : "Upload Image (optional)"}
+        </label>
         <input
           type="file"
           accept="image/*"
@@ -190,21 +265,28 @@ export default function TheoryForm() {
           disabled={uploading}
         />
         {uploading && <div className="text-blue-600 mt-1 text-sm">Uploading...</div>}
-        {formData.image_url && (
-          <img
-            src={supabase.storage.from("theory-images").getPublicUrl(formData.image_url).data.publicUrl}
-            alt="Preview"
-            className="h-24 rounded mt-2 border bg-white object-contain"
-          />
+        {getCurrentImage() && (
+          <div className="mt-2">
+            <img
+              src={getCurrentImage()}
+              alt="Preview"
+              className="h-24 rounded border bg-white object-contain"
+            />
+            {isEditing && !imageFile && (
+              <p className="text-sm text-gray-600 mt-1">Current theory image</p>
+            )}
+          </div>
         )}
       </div>
+      
       <button
         type="submit"
-        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded"
+        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded disabled:opacity-50"
         disabled={uploading}
       >
-        Post Theory
+        {uploading ? "Uploading..." : (isEditing ? "Update Theory" : "Post Theory")}
       </button>
+      
       {error && <p className="text-red-500 mt-2">{error}</p>}
     </form>
   );

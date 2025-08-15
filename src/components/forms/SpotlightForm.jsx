@@ -57,7 +57,7 @@ function MenuBar({ editor }) {
   );
 }
 
-export default function SpotlightForm() {
+export default function SpotlightForm({ editingItem, onSuccess }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -65,11 +65,39 @@ export default function SpotlightForm() {
     position: "",
     location: "",
     image_url: "",
-    created_at: new Date().toISOString(),
   });
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Initialize form with editing data
+  useEffect(() => {
+    if (editingItem) {
+      setIsEditing(true);
+      setFormData({
+        name: editingItem.name || "",
+        description: editingItem.description || "",
+        body: editingItem.body || "",
+        position: editingItem.position || "",
+        location: editingItem.location || "",
+        image_url: editingItem.image_url || "",
+      });
+    } else {
+      // ✅ Reset everything when editingItem is null
+      setIsEditing(false);
+      setFormData({
+        name: "",
+        description: "",
+        body: "",
+        position: "",
+        location: "",
+        image_url: "",
+      });
+      setImageFile(null);
+      setError(null);
+    }
+  }, [editingItem]);
 
   // Tiptap editor setup
   const editor = useEditor({
@@ -87,7 +115,7 @@ export default function SpotlightForm() {
   }, [editor, formData.body]);
 
   const inputClass =
-    "w-full px-4 py-2 border border-neutral-700 rounded bg-neutral-800 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3";
+    "w-full px-4 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-3";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -112,7 +140,8 @@ export default function SpotlightForm() {
       return;
     }
 
-    setFormData((prev) => ({ ...prev, image_url: fileName }));
+    const { data } = supabase.storage.from("spotlight-images").getPublicUrl(fileName);
+    setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
     setUploading(false);
   };
 
@@ -120,17 +149,43 @@ export default function SpotlightForm() {
     e.preventDefault();
     setError(null);
 
-    if (!formData.name || !formData.description || !formData.body || !formData.position || !formData.location || !formData.image_url) {
-      setError("All fields are required.");
+    if (!formData.name || !formData.description || !formData.body || !formData.position || !formData.location) {
+      setError("All fields except image are required.");
       return;
     }
 
-    const { error: insertError } = await supabase.from("spotlights").insert([formData]);
-    
-    if (insertError) {
-      setError(insertError.message);
+    if (!isEditing && !formData.image_url) {
+      setError("Image is required for new spotlights.");
+      return;
+    }
+
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      body: formData.body,
+      position: formData.position,
+      location: formData.location,
+      image_url: formData.image_url,
+    };
+
+    let result;
+    if (isEditing) {
+      // Update existing spotlight
+      result = await supabase
+        .from("spotlights")
+        .update(payload)
+        .eq("id", editingItem.id);
     } else {
-      // Reset form
+      // Insert new spotlight
+      result = await supabase
+        .from("spotlights")
+        .insert([payload]);
+    }
+    
+    if (result.error) {
+      setError(result.error.message);
+    } else {
+      // Reset form to create mode
       setFormData({
         name: "",
         description: "",
@@ -138,18 +193,39 @@ export default function SpotlightForm() {
         position: "",
         location: "",
         image_url: "",
-        created_at: new Date().toISOString(),
       });
       setImageFile(null);
-      if (editor) {
-        editor.commands.clearContent();
-      }
+      setIsEditing(false); // ✅ Reset editing state
+      if (editor) editor.commands.clearContent();
+      
+      alert(isEditing ? "Spotlight updated successfully!" : "Spotlight added successfully!");
+      
+      // ✅ Call onSuccess to clear editingItem in parent component
+      if (onSuccess) onSuccess();
     }
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return supabase.storage.from("spotlight-images").getPublicUrl(url).data.publicUrl;
+  };
+
+  const getCurrentImage = () => {
+    if (imageFile) {
+      return URL.createObjectURL(imageFile);
+    }
+    if (formData.image_url) {
+      return getImageUrl(formData.image_url);
+    }
+    return null;
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4 max-w-lg mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Add New Spotlight</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">
+        {isEditing ? "Edit Spotlight" : "Add New Spotlight"}
+      </h2>
       
       <input
         type="text"
@@ -200,31 +276,38 @@ export default function SpotlightForm() {
       />
       
       <div>
-        <label className="block font-medium text-gray-700 mb-1">Upload Profile Image</label>
+        <label className="block font-medium text-gray-700 mb-1">
+          {isEditing ? "Upload New Profile Image (optional)" : "Upload Profile Image"}
+        </label>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageUpload}
           className={inputClass}
           disabled={uploading}
-          required
+          required={!isEditing && !formData.image_url}
         />
         {uploading && <div className="text-blue-600 mt-1 text-sm">Uploading...</div>}
-        {formData.image_url && (
-          <img
-            src={supabase.storage.from("spotlight-images").getPublicUrl(formData.image_url).data.publicUrl}
-            alt="Preview"
-            className="h-24 rounded mt-2 border bg-white object-cover"
-          />
+        {getCurrentImage() && (
+          <div className="mt-2">
+            <img
+              src={getCurrentImage()}
+              alt="Profile Preview"
+              className="h-24 rounded border bg-white object-cover"
+            />
+            {isEditing && !imageFile && (
+              <p className="text-sm text-gray-600 mt-1">Current profile image</p>
+            )}
+          </div>
         )}
       </div>
       
       <button
         type="submit"
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
         disabled={uploading}
       >
-        Add to Spotlight
+        {uploading ? "Uploading..." : (isEditing ? "Update Spotlight" : "Add to Spotlight")}
       </button>
       
       {error && <p className="text-red-500 mt-2">{error}</p>}
