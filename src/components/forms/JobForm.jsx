@@ -12,6 +12,7 @@ export default function JobForm({ editingItem, onSuccess }) {
     qualifications: [],
     how_to_apply: "",
     apply_url: "",
+    // ❌ Remove posted_at - database handles created_at automatically
   });
   const [logoFile, setLogoFile] = useState(null);
   const [error, setError] = useState(null);
@@ -32,9 +33,10 @@ export default function JobForm({ editingItem, onSuccess }) {
         qualifications: editingItem.qualifications || [],
         how_to_apply: editingItem.how_to_apply || "",
         apply_url: editingItem.apply_url || "",
+        // ❌ Remove posted_at handling
       });
     } else {
-      // ✅ Reset everything when editingItem is null
+      // Reset form
       setIsEditing(false);
       setFormData({
         title: "",
@@ -123,13 +125,13 @@ export default function JobForm({ editingItem, onSuccess }) {
         qualifications: [],
         how_to_apply: "",
         apply_url: "",
+        // ❌ Remove posted_at reset
       });
       setLogoFile(null);
-      setIsEditing(false); // ✅ Reset editing state
+      setIsEditing(false);
       
       alert(isEditing ? "Job updated successfully!" : "Job posted successfully!");
       
-      // ✅ Call onSuccess to clear editingItem in parent component
       if (onSuccess) onSuccess();
     } catch (err) {
       setError(err.message);
@@ -141,6 +143,8 @@ export default function JobForm({ editingItem, onSuccess }) {
       <h2 className="text-xl font-semibold mb-4 text-gray-800">
         {isEditing ? "Edit Job" : "Post a New Job"}
       </h2>
+      
+      {/* ❌ Remove Posted Date field entirely */}
       
       <input
         type="text"

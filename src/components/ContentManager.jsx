@@ -104,7 +104,7 @@ export default function ContentManager({ onEdit, activeContentType, setActiveCon
       case "articles":
         return `By ${item.author} • ${item.category || 'Uncategorized'}`;
       case "jobs":
-        const jobDate = item.posted_at || item.created_at;
+        const jobDate = item.created_at;
         return `${item.location} • ${jobDate ? `Posted ${formatDate(jobDate)}` : 'Recently posted'}`;
       case "theories":
         return `${item.subtitle || 'Theory'} • ${item.created_at ? formatDate(item.created_at) : 'Recently added'}`;
