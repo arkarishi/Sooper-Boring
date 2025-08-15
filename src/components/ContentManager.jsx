@@ -280,11 +280,11 @@ export default function ContentManager({ onEdit, activeContentType, setActiveCon
                 className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6 hover:shadow-lg transition-all duration-200"
               >
                 <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                  {/* Image/Thumbnail - Responsive with proper aspect ratios */}
+                  {/* Image/Thumbnail - Responsive with consistent mobile sizing */}
                   <div className="relative flex-shrink-0 w-full sm:w-auto">
                     {activeContentType.value === "videos" ? (
-                      // 16:9 aspect ratio container for videos
-                      <div className="w-full h-20 sm:w-28 sm:h-16 md:w-32 md:h-18 lg:w-36 lg:h-20 bg-gray-100 rounded-lg overflow-hidden">
+                      // Videos: Full width on mobile (same as others), 16:9 on desktop
+                      <div className="w-full h-32 sm:w-28 sm:h-16 md:w-32 md:h-18 lg:w-36 lg:h-20 bg-gray-100 rounded-lg overflow-hidden">
                         <img
                           src={getImageUrl(item)}
                           alt={getItemTitle(item)}
@@ -295,7 +295,7 @@ export default function ContentManager({ onEdit, activeContentType, setActiveCon
                         />
                       </div>
                     ) : (
-                      // Square container for other content types
+                      // Other content types: Square container
                       <img
                         src={getImageUrl(item)}
                         alt={getItemTitle(item)}
