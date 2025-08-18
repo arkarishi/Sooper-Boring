@@ -5,9 +5,17 @@ import { motion } from "framer-motion";
 
 const placeholderImg = "https://placehold.co/320x180/eeeeee/cccccc?text=No+Image";
 
-const getImageUrl = (path) => {
-  if (!path) return placeholderImg;
-  const { data } = supabase.storage.from("theory-images").getPublicUrl(path);
+// ✅ FIXED: Handle both HTTP URLs and Supabase storage paths
+const getImageUrl = (theory) => {
+  if (!theory || !theory.image_url) return placeholderImg;
+  
+  // Handle full HTTP URLs
+  if (theory.image_url.startsWith('http')) {
+    return theory.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("theory-images").getPublicUrl(theory.image_url);
   return data?.publicUrl || placeholderImg;
 };
 
@@ -52,7 +60,7 @@ export default function Theories({ search }) {
                 <div
                   className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
                   style={{
-                    backgroundImage: `url(${getImageUrl(theory.image_url)})`,
+                    backgroundImage: `url(${getImageUrl(theory)})`, // ✅ Pass full theory object
                   }}
                 />
                 {/* Right: Text Content */}
@@ -83,7 +91,7 @@ export default function Theories({ search }) {
                 <div
                   className="w-full h-48 sm:h-56 bg-center bg-cover rounded-t-xl"
                   style={{
-                    backgroundImage: `url(${getImageUrl(theory.image_url)})`,
+                    backgroundImage: `url(${getImageUrl(theory)})`, // ✅ Pass full theory object
                     backgroundColor: "#f3f4f6",
                   }}
                 />

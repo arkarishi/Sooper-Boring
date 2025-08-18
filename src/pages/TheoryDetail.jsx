@@ -2,9 +2,17 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../utils/supabaseClient";
 
-function getImageUrl(path) {
-  if (!path) return "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
-  const { data } = supabase.storage.from("theory-images").getPublicUrl(path);
+// ✅ FIXED: Handle both HTTP URLs and Supabase storage paths
+function getImageUrl(theory) {
+  if (!theory || !theory.image_url) return "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
+  
+  // Handle full HTTP URLs
+  if (theory.image_url.startsWith('http')) {
+    return theory.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("theory-images").getPublicUrl(theory.image_url);
   return data?.publicUrl || "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
 }
 
@@ -61,7 +69,7 @@ export default function TheoryDetail() {
         <div
           className="w-full rounded-xl overflow-hidden flex flex-col justify-end min-h-64 sm:min-h-80 lg:min-h-96 mb-6 sm:mb-8"
           style={{
-            backgroundImage: `linear-gradient(0deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 25%), url(${getImageUrl(theory.image_url)})`,
+            backgroundImage: `linear-gradient(0deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 25%), url(${getImageUrl(theory)})`,
             backgroundSize: "cover",
             backgroundPosition: "center"
           }}

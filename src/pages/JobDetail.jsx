@@ -4,9 +4,16 @@ import { supabase } from "../utils/supabaseClient";
 import { ArrowLeft } from "lucide-react";
 
 // Helper: Get public image from Supabase Storage
-const getImageUrl = (path) => {
-  if (!path) return "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
-  const { data } = supabase.storage.from("job-images").getPublicUrl(path);
+const getImageUrl = (job) => {
+  if (!job || !job.image_url) return "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
+  
+  // Handle full HTTP URLs
+  if (job.image_url.startsWith('http')) {
+    return job.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("job-images").getPublicUrl(job.image_url);
   return data?.publicUrl || "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
 };
 
@@ -61,9 +68,12 @@ export default function JobDetail() {
         {/* Image */}
         <div className="w-full aspect-[3/2] rounded-xl overflow-hidden flex">
           <img
-            src={getImageUrl(job.image_url)}
+            src={getImageUrl(job)}
             alt={job.title}
             className="w-full h-full object-contain rounded-xl bg-white"
+            onError={(e) => {
+              e.target.src = "https://placehold.co/900x350/eeeeee/cccccc?text=No+Image";
+            }}
           />
         </div>
         {/* About the job */}

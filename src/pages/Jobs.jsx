@@ -5,9 +5,17 @@ import { motion } from "framer-motion";
 
 const placeholderImg = "https://placehold.co/320x180/eeeeee/cccccc?text=No+Image";
 
-const getImageUrl = (path) => {
-  if (!path) return placeholderImg;
-  const { data } = supabase.storage.from("job-images").getPublicUrl(path);
+// ✅ FIXED: Handle both HTTP URLs and Supabase storage paths
+const getImageUrl = (job) => {
+  if (!job || !job.image_url) return placeholderImg;
+  
+  // Handle full HTTP URLs
+  if (job.image_url.startsWith('http')) {
+    return job.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("job-images").getPublicUrl(job.image_url);
   return data?.publicUrl || placeholderImg;
 };
 
@@ -30,7 +38,7 @@ export default function Jobs({ search }) {
   }, [search]);
 
   const fetchJobs = async () => {
-    let query = supabase.from("jobs").select("*").order("posted_at", { ascending: false });
+    let query = supabase.from("jobs").select("*").order("created_at", { ascending: false });
     if (search && search.trim()) {
       query = query.ilike("title", `%${search}%`);
     }
@@ -58,20 +66,24 @@ export default function Jobs({ search }) {
             >
               {/* Desktop/Laptop View - Horizontal Layout */}
               <div className="hidden lg:flex items-center justify-between gap-8 px-0 py-3">
-                {/* Left: Logo */}
-                <div
-                  className="w-16 h-16 min-w-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url(${getImageUrl(job.image_url)})`,
-                  }}
-                />
+                {/* Left: Logo - ✅ FIXED: Use img tag instead of background */}
+                <div className="w-16 h-16 min-w-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden">
+                  <img
+                    src={getImageUrl(job)}
+                    alt={`${job.company} logo`}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.target.src = placeholderImg;
+                    }}
+                  />
+                </div>
                 {/* Middle: Job Info */}
                 <div className="flex flex-col justify-center min-w-0 flex-1 ml-2">
                   <span className="text-black text-base font-semibold font-serif leading-tight mb-0.5 truncate">
                     {job.title}
                   </span>
                   <span className="text-gray-500 text-sm mb-0.5">
-                    Posted {job.posted_at ? timeAgo(new Date(job.posted_at)) : ""}
+                    Posted {job.created_at ? timeAgo(new Date(job.created_at)) : ""}
                   </span>
                   <span className="text-gray-700 text-sm font-normal">
                     {job.location}
@@ -94,13 +106,17 @@ export default function Jobs({ search }) {
                 {/* Content */}
                 <div className="p-4 sm:p-6">
                   <div className="flex items-start gap-4">
-                    {/* Company Logo */}
-                    <div
-                      className="w-12 h-12 sm:w-16 sm:h-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden bg-cover bg-center flex-shrink-0"
-                      style={{
-                        backgroundImage: `url(${getImageUrl(job.image_url)})`,
-                      }}
-                    />
+                    {/* Company Logo - ✅ FIXED: Use img tag instead of background */}
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <img
+                        src={getImageUrl(job)}
+                        alt={`${job.company} logo`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.src = placeholderImg;
+                        }}
+                      />
+                    </div>
                     {/* Job Info */}
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 font-serif leading-tight">
@@ -124,7 +140,7 @@ export default function Jobs({ search }) {
                         <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>Posted {job.posted_at ? timeAgo(new Date(job.posted_at)) : ""}</span>
+                        <span>Posted {job.created_at ? timeAgo(new Date(job.created_at)) : ""}</span>
                       </div>
                       
                       {/* Job Type Tag */}
@@ -137,9 +153,9 @@ export default function Jobs({ search }) {
                       )}
                       
                       {/* Job Description Preview */}
-                      {job.description && (
+                      {job.about && (
                         <p className="text-gray-600 text-sm mb-3 line-clamp-2 leading-relaxed">
-                          {job.description}
+                          {job.about}
                         </p>
                       )}
                       
