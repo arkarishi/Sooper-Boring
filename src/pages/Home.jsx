@@ -5,17 +5,31 @@ import { supabase } from "../utils/supabaseClient";
 // Import floating images
 import float1 from '../assets/images/floating/float1.png';
 
-// Helper for job images (Supabase storage)
-function getJobImageUrl(path) {
-  if (!path) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
-  const { data } = supabase.storage.from("job-images").getPublicUrl(path);
+// ✅ FIXED: Helper for job images - handles both HTTP URLs and Supabase storage
+function getJobImageUrl(job) {
+  if (!job || !job.image_url) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  
+  // Handle full HTTP URLs
+  if (job.image_url.startsWith('http')) {
+    return job.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("job-images").getPublicUrl(job.image_url);
   return data?.publicUrl || "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
 }
 
-// Helper for theory images (Supabase storage)
-function getTheoryImageUrl(path) {
-  if (!path) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
-  const { data } = supabase.storage.from("theory-images").getPublicUrl(path);
+// ✅ FIXED: Helper for theory images - handles both HTTP URLs and Supabase storage
+function getTheoryImageUrl(theory) {
+  if (!theory || !theory.image_url) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  
+  // Handle full HTTP URLs
+  if (theory.image_url.startsWith('http')) {
+    return theory.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("theory-images").getPublicUrl(theory.image_url);
   return data?.publicUrl || "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
 }
 
@@ -28,10 +42,32 @@ function getYouTubeID(url) {
   const match = url?.match(regExp);
   return match && match[1] ? match[1] : "";
 }
-// Helper for video thumbnails (Supabase storage)
-function getVideoImageUrl(path) {
-  if (!path) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
-  const { data } = supabase.storage.from("video-thumbnails").getPublicUrl(path);
+
+// ✅ FIXED: Helper for video thumbnails - handles both HTTP URLs and Supabase storage
+function getVideoImageUrl(video) {
+  if (!video || !video.thumbnail_url) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  
+  // Handle full HTTP URLs
+  if (video.thumbnail_url.startsWith('http')) {
+    return video.thumbnail_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("video-thumbnails").getPublicUrl(video.thumbnail_url);
+  return data?.publicUrl || "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+}
+
+// ✅ FIXED: Helper for spotlight images - handles both HTTP URLs and Supabase storage
+function getSpotlightImageUrl(spotlight) {
+  if (!spotlight || !spotlight.image_url) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
+  
+  // Handle full HTTP URLs
+  if (spotlight.image_url.startsWith('http')) {
+    return spotlight.image_url;
+  }
+  
+  // Handle Supabase storage paths
+  const { data } = supabase.storage.from("spotlight-images").getPublicUrl(spotlight.image_url);
   return data?.publicUrl || "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
 }
 
@@ -67,7 +103,7 @@ export default function Home() {
     );
   }
 
-  // Fetch 3 latest theories
+  // ✅ FIXED: Fetch 3 latest theories - pass full object to helper
   async function fetchLatestTheories() {
     const { data } = await supabase
       .from("theories")
@@ -76,7 +112,7 @@ export default function Home() {
       .limit(3);
     setTheories(
       (data || []).map((t) => ({
-        image: getTheoryImageUrl(t.image_url),
+        image: getTheoryImageUrl(t), // ✅ Pass full object
         title: t.title,
         desc: t.intro,
         link: `/theories/${t.id}`,
@@ -84,7 +120,7 @@ export default function Home() {
     );
   }
 
-  // Fetch 3 latest videos
+  // ✅ FIXED: Fetch 3 latest videos - pass full object to helper
   async function fetchLatestVideos() {
     const { data } = await supabase
       .from("videos")
@@ -95,7 +131,7 @@ export default function Home() {
       (data || []).map((v) => ({
         image: isYouTube(v.video_url)
           ? `https://img.youtube.com/vi/${getYouTubeID(v.video_url)}/hqdefault.jpg`
-          : getVideoImageUrl(v.thumbnail_url),
+          : getVideoImageUrl(v), // ✅ Pass full object
         title: v.title,
         desc: v.description,
         link: `/videos/${v.id}`,
@@ -103,27 +139,27 @@ export default function Home() {
     );
   }
 
-  // Fetch 3 latest jobs
+  // ✅ FIXED: Fetch 3 latest jobs - use created_at instead of posted_at
   async function fetchLatestJobs() {
     const { data } = await supabase
       .from("jobs")
-      .select("id, title, company, image_url, about, posted_at, location")
-      .order("posted_at", { ascending: false })
+      .select("id, title, company, image_url, about, created_at, location") // ✅ Changed posted_at to created_at
+      .order("created_at", { ascending: false }) // ✅ Changed posted_at to created_at
       .limit(3);
     setJobs(
       (data || []).map((job) => ({
-        image: getJobImageUrl(job.image_url),
+        image: getJobImageUrl(job), // ✅ Pass full object
         title: job.title,
         desc: job.about,
         company: job.company,
         location: job.location,
-        posted_at: job.posted_at,
+        created_at: job.created_at, // ✅ Changed posted_at to created_at
         link: `/jobs/${job.id}`,
       }))
     );
   }
 
-  // Fetch 4 latest spotlights
+  // ✅ FIXED: Fetch 4 latest spotlights - pass full object to helper
   async function fetchLatestSpotlights() {
     const { data } = await supabase
       .from("spotlights")
@@ -132,7 +168,7 @@ export default function Home() {
       .limit(4);
     setSpotlights(
       (data || []).map((s) => ({
-        image: getSpotlightImageUrl(s.image_url),
+        image: getSpotlightImageUrl(s), // ✅ Pass full object
         title: s.name,
         desc: s.description,
         link: `/spotlights/${s.id}`,
@@ -276,34 +312,8 @@ function HeroBanner() {
             />
           ))}
         </div>
-
-
-
       </div>
     </div>
-  );
-}
-
-// Floating Images Component
-function FloatingImages() {
-
-
-  return (
-    <>
-      {images.map((image, index) => (
-        <div
-          key={index}
-          className={`absolute opacity-20 hover:opacity-40 transition-all duration-500 hidden lg:block ${image.className}`}
-          style={image.style}
-        >
-          <img
-            src={image.src}
-            alt={image.alt}
-            className="w-full h-full object-cover rounded-full shadow-lg animate-float"
-          />
-        </div>
-      ))}
-    </>
   );
 }
 
@@ -443,13 +453,6 @@ function SpotlightsSection({ items }) {
       </div>
     </div>
   );
-}
-
-// Helper for spotlight images (Supabase storage)
-function getSpotlightImageUrl(path) {
-  if (!path) return "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
-  const { data } = supabase.storage.from("spotlight-images").getPublicUrl(path);
-  return data?.publicUrl || "https://placehold.co/400x200/eeeeee/cccccc?text=No+Image";
 }
 
 // Hides ugly scrollbars in Chrome/Edge
