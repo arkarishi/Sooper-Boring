@@ -10,18 +10,23 @@ export default function DetailProfile({ session }) {
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [expandedExperience, setExpandedExperience] = useState({}); // Track expanded state for each experience
   const navigate = useNavigate();
-  const { id } = useParams();
   
-  // If no ID in params, use current user's profile
-  const profileId = id || session?.user?.id;
+  // ✅ Change from id to slug for public profiles
+  const { slug } = useParams();
+  
+  // ✅ If no slug in params, use current user's profile, otherwise use slug
+  const profileIdentifier = slug || session?.user?.id;
+  
+  // ✅ Can edit only if no slug (current user profile) and user is logged in
+  const canEdit = !slug && session?.user?.id === profileIdentifier;
 
   useEffect(() => {
-    if (profileId) {
-      fetchProfile(profileId);
+    if (profileIdentifier) {
+      fetchProfile(profileIdentifier);
     } else {
       navigate('/auth');
     }
-  }, [profileId]);
+  }, [profileIdentifier]);
 
   // Scroll to section and update active state
   const scrollToSection = (sectionId) => {
@@ -54,20 +59,28 @@ export default function DetailProfile({ session }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const fetchProfile = async (userId) => {
+  // ✅ Updated fetchProfile to handle both slug and ID
+  const fetchProfile = async (identifier) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      setError(null);
+      
+      let query = supabase.from('profiles').select('*');
+      
+      // If we have a slug parameter, query by slug, otherwise by id
+      if (slug) {
+        query = query.eq('slug', identifier);
+      } else {
+        query = query.eq('id', identifier);
+      }
+      
+      const { data, error } = await query.single();
 
       if (error) {
+        console.error('Profile fetch error:', error);
         if (error.code === 'PGRST116') {
           // Profile not found
-          // If it's the current user's profile (no ID in params), redirect to edit
-          if (!id && session?.user?.id === userId) {
+          if (!slug && session?.user?.id === identifier) {
             navigate('/edit-profile');
             return;
           } else {
@@ -80,13 +93,12 @@ export default function DetailProfile({ session }) {
         setProfile(data);
       }
     } catch (err) {
+      console.error('Failed to load profile:', err);
       setError(`Failed to load profile: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
-
-  const canEdit = session?.user?.id === profileId;
 
   // Helper function to truncate text
   const truncateText = (text, wordLimit = 30) => {
@@ -181,6 +193,78 @@ export default function DetailProfile({ session }) {
                   <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 bg-[#e6e9f4] text-[#0d0f1c] text-sm sm:text-base font-bold leading-normal tracking-[0.015em] w-full max-w-[320px] sm:max-w-[480px]">
                     <span className="truncate">Ask For Referral</span>
                   </button>
+                )}
+
+                {/* ✅ Share Profile Section - only show if profile has slug AND user can edit (own profile) */}
+                {profile.slug && canEdit && (
+                  <div className="w-full max-w-[480px] bg-white border border-[#ced3e9] rounded-xl p-3 sm:p-4 mt-2">
+                    <div className="flex flex-col gap-2">
+                      <p className="text-[#0d0f1c] text-sm font-medium text-center">
+                        🔗 Share Your Profile
+                      </p>
+                      
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={`${window.location.origin}/profile/${profile.slug}`}
+                          readOnly
+                          className="flex-1 px-3 py-2 border border-[#ced3e9] rounded-lg bg-[#f8f9fc] text-[#47579e] text-xs sm:text-sm font-mono"
+                          onClick={(e) => e.target.select()}
+                        />
+                        <button
+                          onClick={async (event) => {
+                            const url = `${window.location.origin}/profile/${profile.slug}`;
+                            const button = event.target;
+                            const originalText = button.textContent;
+                            
+                            try {
+                              if (navigator.clipboard && navigator.clipboard.writeText) {
+                                await navigator.clipboard.writeText(url);
+                                button.textContent = '✓';
+                                button.style.backgroundColor = '#22c55e';
+                                setTimeout(() => {
+                                  button.textContent = originalText;
+                                  button.style.backgroundColor = '';
+                                }, 1500);
+                              } else {
+                                const input = event.target.parentElement.querySelector('input');
+                                input.select();
+                                input.setSelectionRange(0, 99999);
+                                const successful = document.execCommand('copy');
+                                if (successful) {
+                                  button.textContent = '✓';
+                                  button.style.backgroundColor = '#22c55e';
+                                  setTimeout(() => {
+                                    button.textContent = originalText;
+                                    button.style.backgroundColor = '';
+                                  }, 1500);
+                                } else {
+                                  throw new Error('Copy failed');
+                                }
+                              }
+                            } catch (err) {
+                              button.textContent = 'Select URL';
+                              button.style.backgroundColor = '#f59e0b';
+                              const input = event.target.parentElement.querySelector('input');
+                              input.focus();
+                              input.select();
+                              setTimeout(() => {
+                                button.textContent = originalText;
+                                button.style.backgroundColor = '';
+                              }, 2000);
+                            }
+                          }}
+                          className="px-3 py-2 bg-[#4264fa] text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-[#3651e8] transition-colors flex-shrink-0"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      
+                      <p className="text-[#47579e] text-xs text-center mt-1">
+                        Share this link so others can view your profile
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

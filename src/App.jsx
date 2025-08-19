@@ -39,14 +39,52 @@ function App() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setUser(session?.user || null);
         setLoading(false);
+        
+        // ✅ Create profile when user signs up
+        if (event === 'SIGNED_UP' && session?.user) {
+          await createUserProfile(session.user);
+        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // ✅ Add this function before your return statement
+  const createUserProfile = async (user) => {
+    try {
+      const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+      const baseSlug = name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: user.id,
+            name: name,
+            slug: baseSlug,
+            created_at: new Date().toISOString(),
+          }
+        ]);
+      
+      if (error) {
+        console.error('Error creating profile:', error);
+      } else {
+        console.log('Profile created successfully');
+      }
+    } catch (err) {
+      console.error('Error in createUserProfile:', err);
+    }
+  };
 
   // Show loading while checking auth state
   if (loading) {
@@ -103,7 +141,7 @@ function App() {
               } 
             />
             <Route 
-              path="/profile/:id" 
+              path="/profile/:slug" 
               element={<DetailProfile session={user} />} 
             />
           </Routes>

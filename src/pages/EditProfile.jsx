@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import skillsData from '../data/skills.json';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import '../styles/datepicker.css';
+import "../styles/datepicker.css";
 
 export default function EditProfile({ session }) {
   const [user, setUser] = useState(session?.user || null);
@@ -267,7 +267,7 @@ export default function EditProfile({ session }) {
     }
   };
 
-  const handleFolderUpload = async (files, bucketName, field) => {
+ /* const handleFolderUpload = async (files, bucketName, field) => {
     if (!files || files.length === 0 || !user) return;
 
     const uploadKey = field.replace('_url', '');
@@ -330,7 +330,50 @@ export default function EditProfile({ session }) {
       alert('Error uploading folder. Please try again.');
     }
   };
+*/
 
+  const handleFolderUpload = async (e, field = 'project1_folder_url') => {
+    const files = Array.from(e.target.files);
+    const projectFolder = `project-${Date.now()}`;
+
+    let rootFolder = ''; // we'll detect this from the first file
+
+    for (const file of files) {
+      const relativePath = file.webkitRelativePath || file.name;
+
+      // Get root folder only once (before first /)
+      if (!rootFolder) {
+        const parts = relativePath.split('/');
+        if (parts.length > 1) {
+          rootFolder = parts[0];
+        }
+      }
+
+      const uploadPath = `${projectFolder}/${relativePath.replace('story.html', 'index.html')}`;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('path', uploadPath);
+
+      try {
+        const res = await fetch('http://localhost:5000/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const result = await res.json();
+        console.log('Uploaded:', result.path);
+      } catch (error) {
+        console.error('Upload failed:', error);
+      }
+    }
+
+    // ✅ Use root folder name to point to correct index.html path
+    const liveUrl = `http://localhost:5000/uploads/${projectFolder}/${rootFolder}`;
+    //handleInputChange('project1_folder_url', liveUrl);
+    handleInputChange(field, liveUrl);
+  };
+  
+  
   // Skills handling functions
   const handleSkillsInputChange = (e) => {
     const value = e.target.value;
@@ -496,8 +539,8 @@ export default function EditProfile({ session }) {
   };
 
   // Upload progress renderer
-  const renderUploadProgress = (field) => {
-    const state = uploadStates[field];
+  const renderUploadProgress = (uploadKey) => {
+    const state = uploadStates[uploadKey];
     
     if (!state.uploading && state.progress === 0) return null;
 
@@ -604,7 +647,7 @@ export default function EditProfile({ session }) {
   }
 
   return (
-    <div className="relative flex size-full min-h-screen flex-col bg-[#f8f9fc] group/design-root overflow-x-hidden" style={{fontFamily: '"Work Sans", "Noto Sans", sans-serif'}}>
+    <div className="relative flex size-full min-h-screen flex-col bg-[#f8f9fc] group/design-root overflow-x-hidden mt-20" style={{fontFamily: '"Work Sans", "Noto Sans", sans-serif'}}>
       <div className="layout-container flex h-full grow flex-col">
         <div className="px-4 sm:px-6 md:px-8 lg:px-16 xl:px-40 flex flex-1 justify-center py-4 sm:py-5">
           <div className="layout-content-container flex flex-col max-w-[480px] sm:max-w-[600px] md:max-w-[720px] lg:max-w-[960px] flex-1 w-full">
@@ -845,7 +888,7 @@ export default function EditProfile({ session }) {
                       onChange={() => {
                         handleInputChange('project1_type', 'Storyboard');
                         // Clear the opposite field when type changes
-                        handleInputChange('project1_folder_url', '');
+                        handleInputChange('project1_folder_url', '');//////////
                       }}
                     />
                   </label>
@@ -877,24 +920,32 @@ export default function EditProfile({ session }) {
                       </div>
                       <input
                         type="file"
-                        webkitdirectory=""
-                        onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project1_folder_url')}
+                        webkitdirectory="true"
+						directory=""
+						multiple
+                        //onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project1_folder_url')}//////18
+						onChange={e => handleFolderUpload(e, 'project1_folder_url')} //////////////
+						disabled={uploadStates.project1_folder.uploading}
                         className="hidden"
                         id="project1-folder"
-                        disabled={uploadStates.project1_folder.uploading}
+                        //disabled={uploadStates.project1_folder.uploading}
+						ref={el => (window.project1FolderInput = el)} // Add a ref for programmatic click
                       />
-                      <label
-                        htmlFor="project1-folder"
-                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                          uploadStates.project1_folder.uploading 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                        }`}
-                      >
+                     <button
+                    type="button"
+                    onClick={() => window.project1FolderInput && window.project1FolderInput.click()}
+                    className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${uploadStates.project1_folder.uploading
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                      }`}
+                    disabled={uploadStates.project1_folder.uploading}
+                  >
+                      
                         <span className="truncate">
                           {uploadStates.project1_folder.uploading ? 'Uploading...' : '📁 Add e-Learning Folder'}
                         </span>
-                      </label>
+                  
+					  </button>
                     </div>
                     {renderUploadProgress('project1_folder')}
                   </div>
@@ -1061,24 +1112,31 @@ export default function EditProfile({ session }) {
                       </div>
                       <input
                         type="file"
-                        webkitdirectory=""
-                        onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project2_folder_url')}
+                        webkitdirectory="true"
+						directory=""
+                        multiple
+                        //onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project2_folder_url')}
+						onChange={e => handleFolderUpload(e, 'project2_folder_url')}
+						disabled={uploadStates.project2_folder.uploading}
                         className="hidden"
                         id="project2-folder"
-                        disabled={uploadStates.project2_folder.uploading}
+                        //disabled={uploadStates.project2_folder.uploading}
+						ref={el => (window.project2FolderInput = el)}
                       />
-                      <label
-                        htmlFor="project2-folder"
-                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                          uploadStates.project2_folder.uploading 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                        }`}
-                      >
-                        <span className="truncate">
-                          {uploadStates.project2_folder.uploading ? 'Uploading...' : '📁 Add e-Learning Folder'}
-                        </span>
-                      </label>
+                    
+					    <button
+                    type="button"
+                    onClick={() => window.project2FolderInput && window.project2FolderInput.click()}
+                    className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${uploadStates.project2_folder.uploading
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
+                      }`}
+                    disabled={uploadStates.project2_folder.uploading}
+                  >
+                    <span className="truncate">
+                      {uploadStates.project2_folder.uploading ? 'Uploading...' : 'Add Folder'}
+                    </span>
+                  </button>
                     </div>
                     {renderUploadProgress('project2_folder')}
                   </div>
