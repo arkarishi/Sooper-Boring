@@ -23,80 +23,122 @@ export default function TheoryDetail() {
 
   useEffect(() => {
     async function fetchTheory() {
-      const { data } = await supabase
-        .from("theories")
-        .select("*")
-        .eq("id", id)
-        .single();
-      setTheory(data);
+      try {
+        // ✅ First get the theory
+        const { data: theoryData, error: theoryError } = await supabase
+          .from("theories")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (theoryError) {
+          console.error("Error fetching theory:", theoryError);
+          return;
+        }
+
+        // ✅ Then get the author profile if author_id exists
+        let authorProfile = null;
+        if (theoryData.author_id) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("name, profile_photo_url, slug")
+            .eq("id", theoryData.author_id)
+            .single();
+          
+          authorProfile = profileData;
+        }
+
+        // ✅ Combine the data
+        setTheory({
+          ...theoryData,
+          profiles: authorProfile
+        });
+
+      } catch (error) {
+        console.error("Error in fetchTheory:", error);
+      }
     }
+    
     fetchTheory();
   }, [id]);
 
   if (!theory)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+        Loading...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-6 sm:py-10" style={{ fontFamily: 'Newsreader, "Noto Sans", sans-serif' }}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 py-10" style={{ fontFamily: 'Newsreader, "Noto Sans", sans-serif' }}>
+      <div className="max-w-6xl mx-auto px-4">
         {/* Breadcrumb */}
-        <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+        <div className="flex flex-wrap gap-2 mb-4">
           <span
-            className="text-neutral-500 text-sm sm:text-base font-medium leading-normal cursor-pointer hover:underline"
+            className="text-[#49719c] text-base font-medium leading-normal cursor-pointer hover:underline"
             onClick={() => navigate("/theories")}
           >
             Theories
           </span>
-          <span className="text-neutral-500 text-sm sm:text-base font-medium leading-normal">/</span>
-          <span className="text-[#141414] text-sm sm:text-base font-medium leading-normal truncate">{theory.title}</span>
+          <span className="text-[#49719c] text-base font-medium leading-normal">/</span>
+          <span className="text-[#141414] text-base font-medium leading-normal">{theory.title}</span>
         </div>
-
+        
+        {/* Title */}
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0d141c] leading-tight mb-2">
+          {theory.title}
+        </h1>
+        
         {/* Intro/Description */}
         {theory.intro && (
-          <div className="text-[#141414] text-sm sm:text-base font-normal leading-relaxed pb-4 sm:pb-6 pt-1">
+          <p className="text-[#0d141c] text-base font-normal leading-normal pb-3 pt-1">
             {theory.intro}
-          </div>
+          </p>
         )}
-
-        {/* Banner Image */}
-        <div
-          className="w-full rounded-xl overflow-hidden flex flex-col justify-end min-h-64 sm:min-h-80 lg:min-h-96 mb-6 sm:mb-8"
-          style={{
-            backgroundImage: `linear-gradient(0deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 25%), url(${getImageUrl(theory)})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center"
-          }}
-        >
-          <div className="flex p-4 sm:p-6">
-            <h1 className="text-white tracking-light text-xl sm:text-2xl lg:text-[28px] font-bold leading-tight drop-shadow-lg">
-              {theory.title}
-            </h1>
-          </div>
-        </div>
-
-        {/* Date */}
-        <div className="mb-4 sm:mb-6 text-gray-400 text-sm sm:text-base">
+        
+        {/* ✅ Author and Date - Updated to match your format */}
+        <div className="mb-6 text-[#49719c] text-sm">
+          {(theory.profiles?.name || theory.author) && <>By {theory.profiles?.name || theory.author} · </>}
           {theory.created_at && (
             <>Published on {new Date(theory.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</>
           )}
         </div>
-
-        {/* Content */}
-        {theory.content && (
-          <div className="mb-6 sm:mb-8">
-            <div 
-              className="text-gray-700 text-sm sm:text-base leading-relaxed prose prose-sm sm:prose-base max-w-none prose-headings:text-[#141414] prose-headings:font-bold prose-h1:text-lg sm:prose-h1:text-xl lg:prose-h1:text-[22px] prose-h2:text-base sm:prose-h2:text-lg lg:prose-h2:text-xl prose-ul:space-y-2 prose-ol:space-y-2 prose-li:pl-2"
-              dangerouslySetInnerHTML={{ __html: theory.content }}
+        
+        {/* Image */}
+        {theory.image_url && (
+          <div className="w-full aspect-[3/2] overflow-hidden rounded-2xl bg-slate-50 mb-8">
+            <img
+              src={getImageUrl(theory)}
+              alt={theory.title}
+              className="w-full h-full object-cover rounded-2xl"
+              style={{ background: "#f5f7fa" }}
             />
           </div>
         )}
+        
+        {/* Content/Body */}
+        <div
+          className="prose prose-lg text-[#0d141c] max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: theory.content || "<i>No detailed content provided.</i>",
+          }}
+        />
+        
+        {/* Tags & Category at the bottom */}
+        <div className="flex flex-wrap gap-2 mt-10">
+          {theory.category && (
+            <span className="inline-block bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded font-semibold uppercase tracking-wide">
+              {theory.category}
+            </span>
+          )}
+          {Array.isArray(theory.tags) && theory.tags.length > 0 && (
+            theory.tags.map(tag => (
+              <span key={tag} className="inline-block bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded">
+                #{tag}
+              </span>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

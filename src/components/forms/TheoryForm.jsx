@@ -150,12 +150,18 @@ export default function TheoryForm({ editingItem, onSuccess }) {
       return;
     }
 
+    // ✅ Get the current user for author information
+    const { data: { user } } = await supabase.auth.getUser();
+
     const payload = {
       title: formData.title,
       subtitle: formData.subtitle,
       intro: formData.intro,
       content: formData.content,
       image_url: formData.image_url,
+      // ✅ Add author information
+      author_id: user?.id, // Store user ID for joining with profiles
+      author: user?.user_metadata?.full_name || user?.email || "Anonymous", // Fallback author name
     };
 
     let result;
@@ -184,12 +190,11 @@ export default function TheoryForm({ editingItem, onSuccess }) {
         image_url: "",
       });
       setImageFile(null);
-      setIsEditing(false); // ✅ Reset editing state
+      setIsEditing(false);
       if (editor) editor.commands.clearContent();
       
       alert(isEditing ? "Theory updated successfully!" : "Theory posted successfully!");
       
-      // ✅ Call onSuccess to clear editingItem in parent component
       if (onSuccess) onSuccess();
     }
   };
