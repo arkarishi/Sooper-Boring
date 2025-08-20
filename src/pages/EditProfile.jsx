@@ -38,28 +38,19 @@ export default function EditProfile({ session }) {
     // Skills
     skills: [],
     
-    // Experience - Now with additional fields
-    experience1_title: '',
-    experience1_company: '',
-    experience1_location: '',
-    experience1_description: '',
-    experience1_start_date: null,
-    experience1_end_date: null,
-    experience1_current: false,
-    experience2_title: '',
-    experience2_company: '',
-    experience2_location: '',
-    experience2_description: '',
-    experience2_start_date: null,
-    experience2_end_date: null,
-    experience2_current: false,
-    experience3_title: '',
-    experience3_company: '',
-    experience3_location: '',
-    experience3_description: '',
-    experience3_start_date: null,
-    experience3_end_date: null,
-    experience3_current: false
+    // ✅ Start with only ONE experience
+    experiences: [
+      {
+        id: 1,
+        title: '',
+        company: '',
+        location: '',
+        description: '',
+        start_date: null,
+        end_date: null,
+        current: false
+      }
+    ]
   });
   
   const [activeTab, setActiveTab] = useState('about');
@@ -140,26 +131,58 @@ export default function EditProfile({ session }) {
         console.error('Error fetching profile:', error);
         setError(`Database error: ${error.message}`);
       } else if (data) {
-        // Parse dates when loading profile
+        // ✅ Handle experiences (new format only)
+        let experiences = [];
+        
+        if (data.experiences && Array.isArray(data.experiences) && data.experiences.length > 0) {
+          experiences = data.experiences.map(exp => ({
+            ...exp,
+            start_date: parseDate(exp.start_date),
+            end_date: parseDate(exp.end_date)
+          }));
+        } else {
+          // Default to one empty experience for new users
+          experiences = [{
+            id: 1,
+            title: '',
+            company: '',
+            location: '',
+            description: '',
+            start_date: null,
+            end_date: null,
+            current: false
+          }];
+        }
+        
+        // Set profile with experiences
         const parsedProfile = {
           ...data,
-          experience1_start_date: parseDate(data.experience1_start_date),
-          experience1_end_date: parseDate(data.experience1_end_date),
-          experience2_start_date: parseDate(data.experience2_start_date),
-          experience2_end_date: parseDate(data.experience2_end_date),
-          experience3_start_date: parseDate(data.experience3_start_date),
-          experience3_end_date: parseDate(data.experience3_end_date)
+          experiences
         };
         
         setProfile(parsedProfile);
-        setInitialProfile(JSON.parse(JSON.stringify(parsedProfile))); // Deep copy for comparison
+        setInitialProfile(JSON.parse(JSON.stringify(parsedProfile)));
         
         if (data.skills && Array.isArray(data.skills)) {
           setSelectedSkills(data.skills);
         }
       } else {
-        // Set initial profile as empty profile for new users
-        setInitialProfile(JSON.parse(JSON.stringify(profile)));
+        // Set initial profile with one empty experience for new users
+        const defaultProfile = {
+          ...profile,
+          experiences: [{
+            id: 1,
+            title: '',
+            company: '',
+            location: '',
+            description: '',
+            start_date: null,
+            end_date: null,
+            current: false
+          }]
+        };
+        setProfile(defaultProfile);
+        setInitialProfile(JSON.parse(JSON.stringify(defaultProfile)));
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -184,19 +207,22 @@ export default function EditProfile({ session }) {
     if (!user || !hasUnsavedChanges) return;
     
     try {
+      // ✅ Generate slug from name
+      const slug = generateSlug(profile.name);
+      
       const profileData = {
         ...profile,
         skills: selectedSkills,
         id: user.id,
         email: user.email,
+        slug: slug, // ✅ Add the generated slug
         updated_at: new Date().toISOString(),
         // Format dates for storage
-        experience1_start_date: formatDateForStorage(profile.experience1_start_date),
-        experience1_end_date: formatDateForStorage(profile.experience1_end_date),
-        experience2_start_date: formatDateForStorage(profile.experience2_start_date),
-        experience2_end_date: formatDateForStorage(profile.experience2_end_date),
-        experience3_start_date: formatDateForStorage(profile.experience3_start_date),
-        experience3_end_date: formatDateForStorage(profile.experience3_end_date)
+        experiences: profile.experiences.map(exp => ({
+          ...exp,
+          start_date: formatDateForStorage(exp.start_date),
+          end_date: formatDateForStorage(exp.end_date)
+        }))
       };
 
       const { error } = await supabase
@@ -490,19 +516,22 @@ export default function EditProfile({ session }) {
   const saveProfile = async () => {
     if (!user) return;
     try {
+      // ✅ Generate slug from name
+      const slug = generateSlug(profile.name);
+      
       const profileData = {
         ...profile,
         skills: selectedSkills,
         id: user.id,
         email: user.email,
+        slug: slug, // ✅ Add the generated slug
         updated_at: new Date().toISOString(),
         // Format dates for storage
-        experience1_start_date: formatDateForStorage(profile.experience1_start_date),
-        experience1_end_date: formatDateForStorage(profile.experience1_end_date),
-        experience2_start_date: formatDateForStorage(profile.experience2_start_date),
-        experience2_end_date: formatDateForStorage(profile.experience2_end_date),
-        experience3_start_date: formatDateForStorage(profile.experience3_start_date),
-        experience3_end_date: formatDateForStorage(profile.experience3_end_date)
+        experiences: profile.experiences.map(exp => ({
+          ...exp,
+          start_date: formatDateForStorage(exp.start_date),
+          end_date: formatDateForStorage(exp.end_date)
+        }))
       };
 
       const { error } = await supabase
@@ -629,6 +658,72 @@ export default function EditProfile({ session }) {
       </div>
     </div>
   );
+
+  // Add these functions after your existing helper functions:
+
+  // Add new experience
+  const addExperience = () => {
+    const newExperience = {
+      id: Date.now(), // Unique ID
+      title: '',
+      company: '',
+      location: '',
+      description: '',
+      start_date: null,
+      end_date: null,
+      current: false
+    };
+    
+    setProfile(prev => ({
+      ...prev,
+      experiences: [...prev.experiences, newExperience]
+    }));
+    
+    setHasUnsavedChanges(true);
+  };
+
+  // Remove experience
+  const removeExperience = (experienceId) => {
+    if (profile.experiences.length <= 1) {
+      alert("You must have at least one experience entry.");
+      return;
+    }
+    
+    const confirmDelete = window.confirm("Are you sure you want to remove this experience?");
+    if (confirmDelete) {
+      setProfile(prev => ({
+        ...prev,
+        experiences: prev.experiences.filter(exp => exp.id !== experienceId)
+      }));
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  // Update specific experience field
+  const updateExperience = (experienceId, field, value) => {
+    setProfile(prev => ({
+      ...prev,
+      experiences: prev.experiences.map(exp => 
+        exp.id === experienceId 
+          ? { ...exp, [field]: value }
+          : exp
+      )
+    }));
+    setHasUnsavedChanges(true);
+  };
+
+  // Add this helper function at the top of your component:
+
+  const generateSlug = (name) => {
+    if (!name) return null;
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim()
+      .substring(0, 50); // Limit length
+  };
 
   if (loading) {
     return (
@@ -1341,300 +1436,147 @@ export default function EditProfile({ session }) {
 
             {activeTab === 'experience' && (
               <>
-                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">Experience</h2>
+                <div className="flex items-center justify-between px-3 sm:px-4 pb-3 pt-5">
+                  <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em]">
+                    Experience
+                  </h2>
+                  <button
+                    onClick={addExperience}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#4264fa] text-white rounded-lg hover:bg-[#3651e8] transition-colors text-sm font-medium"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Experience
+                  </button>
+                </div>
                 
-                {/* Experience 1 */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Experience 1 Title</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience1_title}
-                      onChange={(e) => handleInputChange('experience1_title', e.target.value)}
-                      placeholder="e.g., Senior Instructional Designer"
-                    />
-                  </label>
-                </div>
+                {/* Dynamic Experience List */}
+                <div className="space-y-6">
+                  {profile.experiences.map((experience, index) => (
+                    <div key={experience.id} className="border border-[#ced3e9] rounded-xl p-4 bg-white relative">
+                      
+                      {/* Experience Header with Remove Button */}
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-[#0d0f1c] text-base font-bold">
+                          Experience {index + 1}
+                        </h3>
+                        {profile.experiences.length > 1 && (
+                          <button
+                            onClick={() => removeExperience(experience.id)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                            title="Remove this experience"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
 
-                {/* Experience 1 - Designation */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience1_company}
-                      onChange={(e) => handleInputChange('experience1_company', e.target.value)}
-                      placeholder="e.g., ABC Corp, XYZ University"
-                    />
-                  </label>
-                </div>
+                      {/* Experience Title */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Job Title</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={experience.title}
+                                                       onChange={(e) => updateExperience(experience.id, 'title', e.target.value)}
+                            placeholder="e.g., Senior Instructional Designer"
+                          />
+                        </label>
+                      </div>
 
-                {/* Experience 1 - Location */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience1_location}
-                      onChange={(e) => handleInputChange('experience1_location', e.target.value)}
-                      placeholder="e.g., New York, NY"
-                    />
-                  </label>
-                </div>
+                      {/* Company */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={experience.company}
+                            onChange={(e) => updateExperience(experience.id, 'company', e.target.value)}
+                            placeholder="e.g., ABC Corp, XYZ University"
+                          />
+                        </label>
+                      </div>
 
-                {/* Experience 1 - About Me */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
-                    <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience1_description}
-                      onChange={(e) => handleInputChange('experience1_description', e.target.value)}
-                      placeholder="Describe your responsibilities, achievements, and key projects in this role..."
-                    />
-                  </label>
-                </div>
+                      {/* Location */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={experience.location}
+                            onChange={(e) => updateExperience(experience.id, 'location', e.target.value)}
+                            placeholder="e.g., New York, NY"
+                          />
+                        </label>
+                      </div>
 
-                {/* Experience 1 - Dates */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
-                    <CustomDatePicker
-                      selected={profile.experience1_start_date}
-                      onChange={(date) => handleInputChange('experience1_start_date', date)}
-                      placeholderText="Start Date"
-                      maxDate={profile.experience1_end_date || new Date()}
-                    />
-                  </label>
-                  {!profile.experience1_current && (
-                    <label className="flex flex-col min-w-40 flex-1">
-                      <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
-                      <CustomDatePicker
-                        selected={profile.experience1_end_date}
-                        onChange={(date) => handleInputChange('experience1_end_date', date)}
-                        placeholderText="End Date"
-                        minDate={profile.experience1_start_date}
-                        maxDate={new Date()}
-                      />
-                    </label>
-                  )}
-                </div>
-                <div className="max-w-[480px] px-3 sm:px-4 pb-3">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={profile.experience1_current || false}
-                      onChange={(e) => {
-                        handleInputChange('experience1_current', e.target.checked);
-                        if (e.target.checked) {
-                          handleInputChange('experience1_end_date', null);
-                        }
-                      }}
-                      className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
-                      style={{
-                        backgroundColor: profile.experience1_current ? '#4264fa' : '#fff',
-                        borderColor: profile.experience1_current ? '#4264fa' : '#ced3e9'
-                      }}
-                    />
-                    <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
-                  </label>
-                </div>
+                      {/* Description */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
+                          <textarea
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={experience.description}
+                            onChange={(e) => updateExperience(experience.id, 'description', e.target.value)}
+                            placeholder="Describe your responsibilities, achievements, and key projects in this role..."
+                          />
+                        </label>
+                      </div>
 
-                {/* Experience 2 */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Experience 2 Title</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience2_title}
-                      onChange={(e) => handleInputChange('experience2_title', e.target.value)}
-                      placeholder="Enter position title"
-                    />
-                  </label>
-                </div>
+                      {/* Dates */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
+                          <CustomDatePicker
+                            selected={experience.start_date}
+                            onChange={(date) => updateExperience(experience.id, 'start_date', date)}
+                            placeholderText="Start Date"
+                            maxDate={experience.end_date || new Date()}
+                          />
+                        </label>
+                        {!experience.current && (
+                          <label className="flex flex-col min-w-40 flex-1">
+                            <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
+                            <CustomDatePicker
+                              selected={experience.end_date}
+                              onChange={(date) => updateExperience(experience.id, 'end_date', date)}
+                              placeholderText="End Date"
+                              minDate={experience.start_date}
+                              maxDate={new Date()}
+                            />
+                          </label>
+                        )}
+                      </div>
 
-                {/* Experience 2 - Company */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience2_company}
-                      onChange={(e) => handleInputChange('experience2_company', e.target.value)}
-                      placeholder="e.g., ABC Corp, XYZ University"
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 2 - Location */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience2_location}
-                      onChange={(e) => handleInputChange('experience2_location', e.target.value)}
-                      placeholder="e.g., New York, NY"
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 2 - Description */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
-                    <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience2_description}
-                      onChange={(e) => handleInputChange('experience2_description', e.target.value)}
-                      placeholder="Describe your responsibilities, achievements, and key projects in this role..."
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 2 - Dates */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
-                    <CustomDatePicker
-                      selected={profile.experience2_start_date}
-                      onChange={(date) => handleInputChange('experience2_start_date', date)}
-                      placeholderText="Start Date"
-                      maxDate={profile.experience2_end_date || new Date()}
-                    />
-                  </label>
-                  {!profile.experience2_current && (
-                    <label className="flex flex-col min-w-40 flex-1">
-                      <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
-                      <CustomDatePicker
-                        selected={profile.experience2_end_date}
-                        onChange={(date) => handleInputChange('experience2_end_date', date)}
-                        placeholderText="End Date"
-                        minDate={profile.experience2_start_date}
-                        maxDate={new Date()}
-                      />
-                    </label>
-                  )}
-                </div>
-                <div className="max-w-[480px] px-3 sm:px-4 pb-3">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={profile.experience2_current || false}
-                      onChange={(e) => {
-                        handleInputChange('experience2_current', e.target.checked);
-                        if (e.target.checked) {
-                          handleInputChange('experience2_end_date', null);
-                        }
-                      }}
-                      className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
-                      style={{
-                        backgroundColor: profile.experience2_current ? '#4264fa' : '#fff',
-                        borderColor: profile.experience2_current ? '#4264fa' : '#ced3e9'
-                      }}
-                    />
-                    <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
-                  </label>
-                </div>
-
-                {/* Experience 3 */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Experience 3 Title</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience3_title}
-                      onChange={(e) => handleInputChange('experience3_title', e.target.value)}
-                      placeholder="Enter position title"
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 3 - Company */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience3_company}
-                      onChange={(e) => handleInputChange('experience3_company', e.target.value)}
-                      placeholder="e.g., ABC Corp, XYZ University"
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 3 - Location */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience3_location}
-                      onChange={(e) => handleInputChange('experience3_location', e.target.value)}
-                      placeholder="e.g., New York, NY"
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 3 - Description */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
-                    <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.experience3_description}
-                      onChange={(e) => handleInputChange('experience3_description', e.target.value)}
-                      placeholder="Describe your responsibilities, achievements, and key projects in this role..."
-                    />
-                  </label>
-                </div>
-
-                {/* Experience 3 - Dates */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
-                    <CustomDatePicker
-                      selected={profile.experience3_start_date}
-                      onChange={(date) => handleInputChange('experience3_start_date', date)}
-                      placeholderText="Start Date"
-                      maxDate={profile.experience3_end_date || new Date()}
-                    />
-                  </label>
-                  {!profile.experience3_current && (
-                    <label className="flex flex-col min-w-40 flex-1">
-                      <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
-                      <CustomDatePicker
-                        selected={profile.experience3_end_date}
-                        onChange={(date) => handleInputChange('experience3_end_date', date)}
-                        placeholderText="End Date"
-                        minDate={profile.experience3_start_date}
-                        maxDate={new Date()}
-                      />
-                    </label>
-                  )}
-                </div>
-                <div className="max-w-[480px] px-3 sm:px-4 pb-3">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={profile.experience3_current || false}
-                      onChange={(e) => {
-                        handleInputChange('experience3_current', e.target.checked);
-                        if (e.target.checked) {
-                          handleInputChange('experience3_end_date', null);
-                        }
-                      }}
-                      className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
-                      style={{
-                        backgroundColor: profile.experience3_current ? '#4264fa' : '#fff',
-                        borderColor: profile.experience3_current ? '#4264fa' : '#ced3e9'
-                      }}
-                    />
-                    <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
-                  </label>
+                      {/* Currently Working Checkbox */}
+                      <div className="max-w-[480px] pb-3">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={experience.current || false}
+                            onChange={(e) => {
+                              updateExperience(experience.id, 'current', e.target.checked);
+                              if (e.target.checked) {
+                                updateExperience(experience.id, 'end_date', null);
+                              }
+                            }}
+                            className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
+                            style={{
+                              backgroundColor: experience.current ? '#4264fa' : '#fff',
+                              borderColor: experience.current ? '#4264fa' : '#ced3e9'
+                            }}
+                          />
+                          <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </>
-            )}
+)}
           </div>
         </div>
       </div>

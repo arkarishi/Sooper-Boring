@@ -490,86 +490,79 @@ export default function DetailProfile({ session }) {
                 )}
               </section>
 
-              {/* Experience Section - Updated with View Project button styling */}
+              {/* Experience Section */}
               <section id="experience" className="px-3 sm:px-4 scroll-mt-24 pb-8 sm:pb-12">
                 <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 pt-1">Experience</h2>
                 <div className="space-y-3 sm:space-y-4">
-                  {[1, 2, 3].map((num) => {
-                    const title = profile[`experience${num}_title`];
-                    const company = profile[`experience${num}_company`];
-                    const location = profile[`experience${num}_location`];
-                    const description = profile[`experience${num}_description`];
-                    const startDate = profile[`experience${num}_start_date`];
-                    const endDate = profile[`experience${num}_end_date`];
-                    const isCurrent = profile[`experience${num}_current`];
-                    const isExpanded = expandedExperience[num];
-                    
-                    if (!title && !company && !startDate && !endDate) return null;
-                    
-                    // Format dates for display
-                    const formatDisplayDate = (dateString) => {
-                      if (!dateString) return '';
-                      const date = new Date(dateString);
-                      return date.toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        year: 'numeric' 
-                      });
-                    };
-                    
-                    const startFormatted = formatDisplayDate(startDate);
-                    const endFormatted = isCurrent ? 'Present' : formatDisplayDate(endDate);
-                    
-                    return (
-                      <div key={num} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-[#ced3e9] rounded-xl bg-white">
-                        <div className="flex flex-col items-center gap-1 pt-1 flex-shrink-0">
-                          <div className="text-[#0d0f1c]">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" className="sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 256 256">
-                              <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,72v41.61A184,184,0,0,1,128,136a184.07,184.07,0,0,1-88-22.38V72Zm0,128H40V131.64A200.19,200.19,0,0,0,128,152a200.25,200.25,0,0,0,88-20.37V200ZM104,112a8,8,0,0,1,8-8h32a8,8,0,0,1,0,16H112A8,8,0,0,1,104,112Z" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div className="flex flex-1 flex-col min-w-0">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-bold leading-normal">
-                            {title || 'No title provided'}
-                          </p>
-                          {company && (
-                            <p className="text-[#47579e] text-xs sm:text-sm font-medium leading-normal">
-                              {company}
-                            </p>
-                          )}
-                          {location && (
-                            <p className="text-[#47579e] text-xs sm:text-sm font-normal leading-normal">
-                              📍 {location}
-                            </p>
-                          )}
-                          <p className="text-[#47579e] text-xs sm:text-sm font-normal leading-normal">
-                            {startFormatted || endFormatted ? `${startFormatted || 'Unknown'} - ${endFormatted || 'Unknown'}` : 'No dates provided'}
-                          </p>
-                          
-                          {/* Show description only when expanded */}
-                          {description && isExpanded && (
-                            <div className="mt-2">
-                              <p className="text-[#0d0f1c] text-xs sm:text-sm font-normal leading-normal whitespace-pre-wrap">
-                                {description}
-                              </p>
+                  {profile.experiences && profile.experiences.length > 0 ? (
+                    profile.experiences
+                      .filter(experience => experience.title || experience.company) // Only show experiences with content
+                      .map((experience) => {
+                        const isExpanded = expandedExperience[experience.id];
+                        
+                        // Format dates for display
+                        const formatDisplayDate = (dateString) => {
+                          if (!dateString) return '';
+                          const date = new Date(dateString);
+                          return date.toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            year: 'numeric' 
+                          });
+                        };
+                        
+                        const startFormatted = formatDisplayDate(experience.start_date);
+                        const endFormatted = experience.current ? 'Present' : formatDisplayDate(experience.end_date);
+                        
+                        return (
+                          <div key={experience.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-[#ced3e9] rounded-xl bg-white">
+                            <div className="flex flex-col items-center gap-1 pt-1 flex-shrink-0">
+                              <div className="text-[#0d0f1c]">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" className="sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 256 256">
+                                  <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,72v41.61A184,184,0,0,1,128,136a184.07,184.07,0,0,1-88-22.38V72Zm0,128H40V131.64A200.19,200.19,0,0,0,128,152a200.25,200.25,0,0,0,88-20.37V200ZM104,112a8,8,0,0,1,8-8h32a8,8,0,0,1,0,16H112A8,8,0,0,1,104,112Z" />
+                                </svg>
+                              </div>
                             </div>
-                          )}
-                          
-                          {/* Read More button with same styling as View Project */}
-                          {description && (
-                            <button
-                              onClick={() => toggleExperienceExpansion(num)}
-                              className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit mt-2"
-                            >
-                              <span className="truncate">{isExpanded ? 'Read Less' : 'Read More'}</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {!profile.experience1_title && !profile.experience2_title && !profile.experience3_title && (
+                            <div className="flex flex-1 flex-col min-w-0">
+                              <p className="text-[#0d0f1c] text-sm sm:text-base font-bold leading-normal">
+                                {experience.title || 'No title provided'}
+                              </p>
+                              {experience.company && (
+                                <p className="text-[#47579e] text-xs sm:text-sm font-medium leading-normal">
+                                  {experience.company}
+                                </p>
+                              )}
+                              {experience.location && (
+                                <p className="text-[#47579e] text-xs sm:text-sm font-normal leading-normal">
+                                  📍 {experience.location}
+                                </p>
+                              )}
+                              <p className="text-[#47579e] text-xs sm:text-sm font-normal leading-normal">
+                                {startFormatted || endFormatted ? `${startFormatted || 'Unknown'} - ${endFormatted || 'Unknown'}` : 'No dates provided'}
+                              </p>
+                              
+                              {/* Show description only when expanded */}
+                              {experience.description && isExpanded && (
+                                <div className="mt-2">
+                                  <p className="text-[#0d0f1c] text-xs sm:text-sm font-normal leading-normal whitespace-pre-wrap">
+                                    {experience.description}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Read More button */}
+                              {experience.description && (
+                                <button
+                                  onClick={() => toggleExperienceExpansion(experience.id)}
+                                  className="flex min-w-[84px] max-w-[200px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 sm:h-10 px-3 sm:px-4 bg-[#e6e9f4] text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal w-fit mt-2"
+                                >
+                                  <span className="truncate">{isExpanded ? 'Read Less' : 'Read More'}</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                  ) : (
                     <p className="text-[#47579e] text-sm sm:text-base italic">No experience added yet.</p>
                   )}
                 </div>
