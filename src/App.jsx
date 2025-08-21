@@ -24,7 +24,7 @@ import DetailProfile from "./pages/DetailProfile";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -96,7 +96,8 @@ function App() {
       <ScrollToTop />
       <div className="w-screen min-h-screen flex flex-col w-full bg-neutral-50">
         <Navbar search={search} setSearch={setSearch} session={user} />
-        <main className="flex-grow">
+        {/* Add pt-16 to main to account for fixed navbar */}
+        <main className="flex-grow pt-16">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />

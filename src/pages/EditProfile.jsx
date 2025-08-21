@@ -11,7 +11,7 @@ export default function EditProfile({ session }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
-  // Update the profile state to include the new fields
+  // Update the profile state to include education
   const [profile, setProfile] = useState({
     name: '',
     title: '',
@@ -23,22 +23,22 @@ export default function EditProfile({ session }) {
     project1_title: '',
     project1_description: '',
     project1_type: '',
-    project1_folder_url: '',    // For e-Learning
-    project1_pdf_url: '',       // For Storyboard - NEW
+    project1_folder_url: '',
+    project1_pdf_url: '',
     project1_thumbnail_url: '',
     
     // Project 2
     project2_title: '',
     project2_description: '',
     project2_type: '',
-    project2_folder_url: '',    // For e-Learning
-    project2_pdf_url: '',       // For Storyboard - NEW
+    project2_folder_url: '',
+    project2_pdf_url: '',
     project2_thumbnail_url: '',
     
     // Skills
     skills: [],
     
-    // ✅ Start with only ONE experience
+    // Experiences
     experiences: [
       {
         id: 1,
@@ -49,6 +49,22 @@ export default function EditProfile({ session }) {
         start_date: null,
         end_date: null,
         current: false
+      }
+    ],
+    
+    // ✅ NEW: Education
+    education: [
+      {
+        id: 1,
+        degree: '',
+        institution: '',
+        field_of_study: '',
+        location: '',
+        description: '',
+        start_date: null,
+        end_date: null,
+        current: false,
+        gpa: ''
       }
     ]
   });
@@ -131,9 +147,8 @@ export default function EditProfile({ session }) {
         console.error('Error fetching profile:', error);
         setError(`Database error: ${error.message}`);
       } else if (data) {
-        // ✅ Handle experiences (new format only)
+        // Handle experiences
         let experiences = [];
-        
         if (data.experiences && Array.isArray(data.experiences) && data.experiences.length > 0) {
           experiences = data.experiences.map(exp => ({
             ...exp,
@@ -141,7 +156,6 @@ export default function EditProfile({ session }) {
             end_date: parseDate(exp.end_date)
           }));
         } else {
-          // Default to one empty experience for new users
           experiences = [{
             id: 1,
             title: '',
@@ -154,10 +168,33 @@ export default function EditProfile({ session }) {
           }];
         }
         
-        // Set profile with experiences
+        // ✅ Handle education
+        let education = [];
+        if (data.education && Array.isArray(data.education) && data.education.length > 0) {
+          education = data.education.map(edu => ({
+            ...edu,
+            start_date: parseDate(edu.start_date),
+            end_date: parseDate(edu.end_date)
+          }));
+        } else {
+          education = [{
+            id: 1,
+            degree: '',
+            institution: '',
+            field_of_study: '',
+            location: '',
+            description: '',
+            start_date: null,
+            end_date: null,
+            current: false,
+            gpa: ''
+          }];
+        }
+        
         const parsedProfile = {
           ...data,
-          experiences
+          experiences,
+          education // ✅ Add education
         };
         
         setProfile(parsedProfile);
@@ -167,7 +204,7 @@ export default function EditProfile({ session }) {
           setSelectedSkills(data.skills);
         }
       } else {
-        // Set initial profile with one empty experience for new users
+        // Set initial profile with defaults
         const defaultProfile = {
           ...profile,
           experiences: [{
@@ -179,6 +216,18 @@ export default function EditProfile({ session }) {
             start_date: null,
             end_date: null,
             current: false
+          }],
+          education: [{
+            id: 1,
+            degree: '',
+            institution: '',
+            field_of_study: '',
+            location: '',
+            description: '',
+            start_date: null,
+            end_date: null,
+            current: false,
+            gpa: ''
           }]
         };
         setProfile(defaultProfile);
@@ -207,7 +256,6 @@ export default function EditProfile({ session }) {
     if (!user || !hasUnsavedChanges) return;
     
     try {
-      // ✅ Generate slug from name
       const slug = generateSlug(profile.name);
       
       const profileData = {
@@ -215,13 +263,18 @@ export default function EditProfile({ session }) {
         skills: selectedSkills,
         id: user.id,
         email: user.email,
-        slug: slug, // ✅ Add the generated slug
+        slug: slug,
         updated_at: new Date().toISOString(),
-        // Format dates for storage
         experiences: profile.experiences.map(exp => ({
           ...exp,
           start_date: formatDateForStorage(exp.start_date),
           end_date: formatDateForStorage(exp.end_date)
+        })),
+        // ✅ Add education
+        education: profile.education.map(edu => ({
+          ...edu,
+          start_date: formatDateForStorage(edu.start_date),
+          end_date: formatDateForStorage(edu.end_date)
         }))
       };
 
@@ -516,7 +569,6 @@ export default function EditProfile({ session }) {
   const saveProfile = async () => {
     if (!user) return;
     try {
-      // ✅ Generate slug from name
       const slug = generateSlug(profile.name);
       
       const profileData = {
@@ -524,13 +576,19 @@ export default function EditProfile({ session }) {
         skills: selectedSkills,
         id: user.id,
         email: user.email,
-        slug: slug, // ✅ Add the generated slug
+        slug: slug,
         updated_at: new Date().toISOString(),
         // Format dates for storage
         experiences: profile.experiences.map(exp => ({
           ...exp,
           start_date: formatDateForStorage(exp.start_date),
           end_date: formatDateForStorage(exp.end_date)
+        })),
+        // ✅ Add education with formatted dates
+        education: profile.education.map(edu => ({
+          ...edu,
+          start_date: formatDateForStorage(edu.start_date),
+          end_date: formatDateForStorage(edu.end_date)
         }))
       };
 
@@ -540,7 +598,6 @@ export default function EditProfile({ session }) {
 
       if (error) throw error;
       
-      // Update initial profile state and clear unsaved changes
       setInitialProfile(JSON.parse(JSON.stringify(profile)));
       setHasUnsavedChanges(false);
       
@@ -659,54 +716,56 @@ export default function EditProfile({ session }) {
     </div>
   );
 
-  // Add these functions after your existing helper functions:
+  // Add these functions after your experience functions:
 
-  // Add new experience
-  const addExperience = () => {
-    const newExperience = {
-      id: Date.now(), // Unique ID
-      title: '',
-      company: '',
+  // Add new education
+  const addEducation = () => {
+    const newEducation = {
+      id: Date.now(),
+      degree: '',
+      institution: '',
+      field_of_study: '',
       location: '',
       description: '',
       start_date: null,
       end_date: null,
-      current: false
+      current: false,
+      gpa: ''
     };
     
     setProfile(prev => ({
       ...prev,
-      experiences: [...prev.experiences, newExperience]
+      education: [...prev.education, newEducation]
     }));
     
     setHasUnsavedChanges(true);
   };
 
-  // Remove experience
-  const removeExperience = (experienceId) => {
-    if (profile.experiences.length <= 1) {
-      alert("You must have at least one experience entry.");
+  // Remove education
+  const removeEducation = (educationId) => {
+    if (profile.education.length <= 1) {
+      alert("You must have at least one education entry.");
       return;
     }
     
-    const confirmDelete = window.confirm("Are you sure you want to remove this experience?");
+    const confirmDelete = window.confirm("Are you sure you want to remove this education?");
     if (confirmDelete) {
       setProfile(prev => ({
         ...prev,
-        experiences: prev.experiences.filter(exp => exp.id !== experienceId)
+        education: prev.education.filter(edu => edu.id !== educationId)
       }));
       setHasUnsavedChanges(true);
     }
   };
 
-  // Update specific experience field
-  const updateExperience = (experienceId, field, value) => {
+  // Update specific education field
+  const updateEducation = (educationId, field, value) => {
     setProfile(prev => ({
       ...prev,
-      experiences: prev.experiences.map(exp => 
-        exp.id === experienceId 
-          ? { ...exp, [field]: value }
-          : exp
+      education: prev.education.map(edu => 
+        edu.id === educationId 
+          ? { ...edu, [field]: value }
+          : edu
       )
     }));
     setHasUnsavedChanges(true);
@@ -918,6 +977,21 @@ export default function EditProfile({ session }) {
                   }`}
                 >
                   <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Experience</p>
+                </a>
+                {/* Add this after the experience tab */}
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleTabSwitch('education');
+                  }}
+                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
+                    activeTab === 'education' 
+                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
+                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
+                  }`}
+                >
+                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Education</p>
                 </a>
               </div>
             </div>
@@ -1459,6 +1533,8 @@ export default function EditProfile({ session }) {
                       {/* Experience Header with Remove Button */}
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-[#0d0f1c] text-base font-bold">
+
+
                           Experience {index + 1}
                         </h3>
                         {profile.experiences.length > 1 && (
@@ -1481,7 +1557,7 @@ export default function EditProfile({ session }) {
                           <input
                             className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
                             value={experience.title}
-                                                       onChange={(e) => updateExperience(experience.id, 'title', e.target.value)}
+                            onChange={(e) => updateExperience(experience.id, 'title', e.target.value)}
                             placeholder="e.g., Senior Instructional Designer"
                           />
                         </label>
@@ -1576,7 +1652,174 @@ export default function EditProfile({ session }) {
                   ))}
                 </div>
               </>
-)}
+            )}
+
+            {/* Add this after the experience tab content */}
+            {activeTab === 'education' && (
+              <>
+                <div className="flex items-center justify-between px-3 sm:px-4 pb-3 pt-5">
+                  <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em]">
+                    Education
+                  </h2>
+                  <button
+                    onClick={addEducation}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#4264fa] text-white rounded-lg hover:bg-[#3651e8] transition-colors text-sm font-medium"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Education
+                  </button>
+                </div>
+                
+                {/* Dynamic Education List */}
+                <div className="space-y-6">
+                  {profile.education.map((education, index) => (
+                    <div key={education.id} className="border border-[#ced3e9] rounded-xl p-4 bg-white relative">
+                      
+                      {/* Education Header with Remove Button */}
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-[#0d0f1c] text-base font-bold">
+                          Education {index + 1}
+                        </h3>
+                        {profile.education.length > 1 && (
+                          <button
+                            onClick={() => removeEducation(education.id)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
+                            title="Remove this education"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Degree */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Degree</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={education.degree}
+                            onChange={(e) => updateEducation(education.id, 'degree', e.target.value)}
+                            placeholder="e.g., Bachelor of Science, Master of Arts, PhD"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Institution */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Institution</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={education.institution}
+                            onChange={(e) => updateEducation(education.id, 'institution', e.target.value)}
+                            placeholder="e.g., Harvard University, MIT, Stanford"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Field of Study */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Field of Study</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={education.field_of_study}
+                            onChange={(e) => updateEducation(education.id, 'field_of_study', e.target.value)}
+                            placeholder="e.g., Computer Science, Education, Psychology"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Location and GPA */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={education.location}
+                            onChange={(e) => updateEducation(education.id, 'location', e.target.value)}
+                            placeholder="e.g., Cambridge, MA"
+                          />
+                        </label>
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">GPA (optional)</p>
+                          <input
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={education.gpa}
+                            onChange={(e) => updateEducation(education.id, 'gpa', e.target.value)}
+                            placeholder="e.g., 3.8/4.0, 8.5/10"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Description */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Description (optional)</p>
+                          <textarea
+                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
+                            value={education.description}
+                            onChange={(e) => updateEducation(education.id, 'description', e.target.value)}
+                            placeholder="Relevant coursework, achievements, honors, thesis topic, etc..."
+                          />
+                        </label>
+                      </div>
+
+                      {/* Dates */}
+                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
+                        <label className="flex flex-col min-w-40 flex-1">
+                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
+                          <CustomDatePicker
+                            selected={education.start_date}
+                            onChange={(date) => updateEducation(education.id, 'start_date', date)}
+                            placeholderText="Start Date"
+                            maxDate={education.end_date || new Date()}
+                          />
+                        </label>
+                        {!education.current && (
+                          <label className="flex flex-col min-w-40 flex-1">
+                            <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
+                            <CustomDatePicker
+                              selected={education.end_date}
+                              onChange={(date) => updateEducation(education.id, 'end_date', date)}
+                              placeholderText="End Date"
+                              minDate={education.start_date}
+                              maxDate={new Date()}
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      {/* Currently Studying Checkbox */}
+                      <div className="max-w-[480px] pb-3">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={education.current || false}
+                            onChange={(e) => {
+                              updateEducation(education.id, 'current', e.target.checked);
+                              if (e.target.checked) {
+                                updateEducation(education.id, 'end_date', null);
+                              }
+                            }}
+                            className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
+                            style={{
+                              backgroundColor: education.current ? '#4264fa' : '#fff',
+                              borderColor: education.current ? '#4264fa' : '#ced3e9'
+                            }}
+                          />
+                          <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently studying here</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

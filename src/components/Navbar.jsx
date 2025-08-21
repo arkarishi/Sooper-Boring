@@ -45,6 +45,7 @@ function SearchDropdown({ search, setSearch, onItemClick }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   useEffect(() => {
     if (search.trim().length > 1) {
@@ -88,7 +89,7 @@ function SearchDropdown({ search, setSearch, onItemClick }) {
       ]);
 
       const results = [];
-      
+
       // Add articles - using image_url directly since it's a full URL
       if (articlesRes.data) {
         results.push(...articlesRes.data.map(item => ({
@@ -183,11 +184,25 @@ function SearchDropdown({ search, setSearch, onItemClick }) {
         placeholder="Search…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        onFocus={() => search.trim().length > 1 && suggestions.length > 0 && setShowDropdown(true)}
-        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-        className="px-3 sm:px-4 py-2 border rounded-lg shadow bg-white text-gray-700 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
+        onFocus={() => {
+          setFocused(true);
+          if (search.trim().length > 1 && suggestions.length > 0) setShowDropdown(true);
+        }}
+        onBlur={() => {
+          setFocused(false);
+          setTimeout(() => setShowDropdown(false), 200);
+        }}
+        className={`border rounded-full shadow bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base py-2
+          // Mobile: Fixed width, no expansion
+          w-48 px-4
+          // Desktop: Expanding animation
+          sm:transition-all sm:duration-300
+          ${focused || search.length > 0
+            ? "sm:px-8 sm:w-80"
+            : "sm:px-4 sm:w-48"}
+        `}
       />
-      
+
       {showDropdown && (
         <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
           {loading ? (
@@ -214,7 +229,7 @@ function SearchDropdown({ search, setSearch, onItemClick }) {
                     backgroundColor: "#f3f4f6",
                   }}
                 />
-                
+
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold text-gray-900 truncate">
@@ -280,7 +295,7 @@ function ProfileDropdown({ user, onLogout }) {
     if (profile?.profile_photo_url) {
       return profile.profile_photo_url;
     }
-    
+
     // Generate a random avatar using DiceBear API with the user's email as seed
     const seed = user?.email || 'default';
     return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e6e9f4&textColor=0d0f1c`;
@@ -391,44 +406,75 @@ export default function Navbar({ search, setSearch }) {
   };
 
   const isDashboard = location.pathname.startsWith('/dashboard');
-  const isAuth = location.pathname === '/auth';
-  const shouldHideSearch = isDashboard || isAuth;
 
   return (
-    <nav className="bg-white border-b border-gray-200 py-4 px-4 sm:px-8 flex justify-between items-center relative">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-[#006B37] border-b border-gray-200 py-2 px-4 sm:px-8 flex justify-between items-center">
       {/* Left: Logo only */}
       <div className="flex items-center">
-        <Link to="/" className="text-xl font-bold text-black font-serif tracking-tight">
+        <Link
+          to="/"
+          className="text-xl font-bold text-white font-serif tracking-tight transition-all duration-150 hover:text-white hover:scale-110"
+        >
           Design Hub
         </Link>
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex gap-6 ml-8 font-serif text-base font-medium">
-          <Link to="/articles" className="text-black hover:text-blue-600">Articles</Link>
-          <Link to="/theories" className="text-black hover:text-blue-600">Theories</Link>
-          <Link to="/videos" className="text-black hover:text-blue-600">Videos</Link>
-          <Link to="/jobs" className="text-black hover:text-blue-600">Jobs</Link>
-          <Link to="/spotlights" className="text-black hover:text-blue-600">Spotlights</Link>
+          <Link
+            to="/articles"
+            className="text-white transition-all duration-150 hover:text-white hover:scale-110"
+          >
+            Articles
+          </Link>
+          <Link
+            to="/theories"
+            className="text-white transition-all duration-150 hover:text-white hover:scale-110"
+          >
+            Theories
+          </Link>
+          <Link
+            to="/videos"
+            className="text-white transition-all duration-150 hover:text-white hover:scale-110"
+          >
+            Videos
+          </Link>
+          <Link
+            to="/jobs"
+            className="text-white transition-all duration-150 hover:text-white hover:scale-110"
+          >
+            Jobs
+          </Link>
+          <Link
+            to="/spotlights"
+            className="text-white transition-all duration-150 hover:text-white hover:scale-110"
+          >
+            Spotlights
+          </Link>
           {user && hasAdminAccess && (
-            <Link to="/dashboard" className="text-black hover:text-blue-600">Dashboard</Link>
+            <Link
+              to="/dashboard"
+              className="text-white transition-all duration-150 hover:text-white hover:scale-110"
+            >
+              Dashboard
+            </Link>
           )}
         </div>
       </div>
-      
+
       {/* Right: Search + Hamburger + Auth */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Search bar - hidden on dashboard and auth pages */}
-        {!shouldHideSearch && (
+        {/* Search bar - hidden on mobile (sm:block), hidden on dashboard */}
+        {!isDashboard && (
           <div className="hidden sm:block">
-            <SearchDropdown 
-              search={search} 
-              setSearch={setSearch} 
+            <SearchDropdown
+              search={search}
+              setSearch={setSearch}
               onItemClick={handleSearchItemClick}
             />
           </div>
         )}
         {/* Hamburger for mobile - positioned before profile */}
         <button
-          className="lg:hidden p-2 rounded hover:bg-gray-100"
+          className="lg:hidden p-2 rounded hover:bg-white hover:bg-opacity-20 text-white"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
@@ -444,7 +490,7 @@ export default function Navbar({ search, setSearch }) {
           </Link>
         )}
       </div>
-      
+
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="absolute top-full left-0 w-full bg-white border-b border-gray-200 z-50 flex flex-col lg:hidden">
@@ -460,12 +506,12 @@ export default function Navbar({ search, setSearch }) {
             {user && (
               <Link to="/profile" className="py-2 text-black hover:text-blue-600" onClick={() => setMenuOpen(false)}>My Profile</Link>
             )}
-            {/* Mobile search - hidden on dashboard and auth pages */}
-            {!shouldHideSearch && (
-              <div className="mt-2 sm:hidden">
-                <SearchDropdown 
-                  search={search} 
-                  setSearch={setSearch} 
+            {/* Search bar in mobile menu - only show if not dashboard */}
+            {!isDashboard && (
+              <div className="mt-2">
+                <SearchDropdown
+                  search={search}
+                  setSearch={setSearch}
                   onItemClick={handleSearchItemClick}
                 />
               </div>
