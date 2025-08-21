@@ -771,6 +771,57 @@ export default function EditProfile({ session }) {
     setHasUnsavedChanges(true);
   };
 
+  // Add new experience
+  const addExperience = () => {
+    const newExperience = {
+      id: Date.now(),
+      title: '',
+      company: '',
+      location: '',
+      description: '',
+      start_date: null,
+      end_date: null,
+      current: false
+    };
+    
+    setProfile(prev => ({
+      ...prev,
+      experiences: [...prev.experiences, newExperience]
+    }));
+    
+    setHasUnsavedChanges(true);
+  };
+
+  // Remove experience
+  const removeExperience = (experienceId) => {
+    if (profile.experiences.length <= 1) {
+      alert("You must have at least one experience entry.");
+      return;
+    }
+    
+    const confirmDelete = window.confirm("Are you sure you want to remove this experience?");
+    if (confirmDelete) {
+      setProfile(prev => ({
+        ...prev,
+        experiences: prev.experiences.filter(exp => exp.id !== experienceId)
+      }));
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  // Update specific experience field
+  const updateExperience = (experienceId, field, value) => {
+    setProfile(prev => ({
+      ...prev,
+      experiences: prev.experiences.map(exp => 
+        exp.id === experienceId 
+          ? { ...exp, [field]: value }
+          : exp
+      )
+    }));
+    setHasUnsavedChanges(true);
+  };
+
   // Add this helper function at the top of your component:
 
   const generateSlug = (name) => {
