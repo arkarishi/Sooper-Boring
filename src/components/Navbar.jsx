@@ -268,7 +268,7 @@ function ProfileDropdown({ user, onLogout }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('profile_photo_url, name')
+        .select('profile_photo_url, name, slug')
         .eq('id', user.id)
         .single();
 
@@ -301,11 +301,39 @@ function ProfileDropdown({ user, onLogout }) {
     return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e6e9f4&textColor=0d0f1c`;
   };
 
+  // Copy profile URL function
+  const copyProfileUrl = async () => {
+    if (!profile?.slug) return;
+    
+    const url = `${window.location.origin}/profile/${profile.slug}`;
+    
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        alert('Profile URL copied to clipboard!');
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Profile URL copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+      alert('Failed to copy URL. Please try again.');
+    }
+    
+    setShowDropdown(false);
+  };
+
   return (
     <div className="relative">
       <div
         onClick={() => setShowDropdown(!showDropdown)}
-        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all duration-200"
+        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 cursor-pointer hover:ring-2 hover:ring-white hover:ring-opacity-50 transition-all duration-200"
         style={{
           backgroundImage: `url("${getProfileImageUrl()}")`,
           backgroundColor: "#e6e9f4"
@@ -330,6 +358,20 @@ function ProfileDropdown({ user, onLogout }) {
               </svg>
               My Profile
             </button>
+            
+            {/* Share Profile URL - only show if user has a slug */}
+            {profile?.slug && (
+              <button
+                onClick={copyProfileUrl}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                Share Profile
+              </button>
+            )}
+            
             <button
               onClick={handleLogoutClick}
               className="w-full text-left px-4 py-2 text-sm text-red-600 bg-white hover:bg-red-50 flex items-center gap-2"

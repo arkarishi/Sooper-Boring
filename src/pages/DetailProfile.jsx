@@ -196,7 +196,7 @@ export default function DetailProfile({ session }) {
                 )}
 
                 {/* ✅ Share Profile Section - only show if profile has slug AND user can edit (own profile) */}
-                {profile.slug && canEdit && (
+                {/* {profile.slug && canEdit && (
                   <div className="w-full max-w-[480px] bg-white border border-[#ced3e9] rounded-xl p-3 sm:p-4 mt-2">
                     <div className="flex flex-col gap-2">
                       <p className="text-[#0d0f1c] text-sm font-medium text-center">
@@ -265,7 +265,7 @@ export default function DetailProfile({ session }) {
                       </p>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
 
