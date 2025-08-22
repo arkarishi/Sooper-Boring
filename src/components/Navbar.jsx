@@ -528,7 +528,7 @@ export default function Navbar({ search, setSearch }) {
           <ProfileDropdown user={user} onLogout={handleLogout} />
         ) : (
           <Link to="/auth" className="bg-blue-600 text-white px-3 sm:px-4 py-1 rounded hover:bg-blue-700 text-sm sm:text-base">
-            Login/Sign Up
+            Login
           </Link>
         )}
       </div>

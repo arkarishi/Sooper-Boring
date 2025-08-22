@@ -2,16 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import skillsData from '../data/skills.json';
-import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import "../styles/datepicker.css";
+
+// Import optimized components
+import UnsavedChangesIndicator from '../components/edit-profile/shared/UnsavedChangesIndicator';
+import EditProfileHeader from '../components/edit-profile/EditProfileHeader';
+import EditProfileTabs from '../components/edit-profile/EditProfileTabs';
+import BasicInfoForm from '../components/edit-profile/forms/BasicInfoForm';
+import AboutSection from '../components/edit-profile/sections/AboutSection';
+import ProfilePhotoUpload from '../components/edit-profile/upload/ProfilePhotoUpload';
+import ProjectsSection from '../components/edit-profile/sections/ProjectsSection';
+import SkillsSection from '../components/edit-profile/sections/SkillsSection';
+import ExperienceSection from '../components/edit-profile/sections/ExperienceSection';
+import EducationSection from '../components/edit-profile/sections/EducationSection';
 
 export default function EditProfile({ session }) {
   const [user, setUser] = useState(session?.user || null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
-  // Update the profile state to include education
+  // Profile state
   const [profile, setProfile] = useState({
     name: '',
     title: '',
@@ -52,7 +63,7 @@ export default function EditProfile({ session }) {
       }
     ],
     
-    // ✅ NEW: Education
+    // Education
     education: [
       {
         id: 1,
@@ -70,14 +81,10 @@ export default function EditProfile({ session }) {
   });
   
   const [activeTab, setActiveTab] = useState('about');
-  const [skillsInput, setSkillsInput] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
-  const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
-  const [filteredSkills, setFilteredSkills] = useState([]);
-  const skillsInputRef = useRef(null);
   const [error, setError] = useState(null);
   
-  // Add state for form persistence
+  // Form persistence state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [initialProfile, setInitialProfile] = useState(null);
   
@@ -85,10 +92,10 @@ export default function EditProfile({ session }) {
   const [uploadStates, setUploadStates] = useState({
     profile_photo: { uploading: false, progress: 0 },
     project1_folder: { uploading: false, progress: 0, files: [] },
-    project1_pdf: { uploading: false, progress: 0 },      // NEW
+    project1_pdf: { uploading: false, progress: 0 },
     project1_thumbnail: { uploading: false, progress: 0 },
     project2_folder: { uploading: false, progress: 0, files: [] },
-    project2_pdf: { uploading: false, progress: 0 },      // NEW
+    project2_pdf: { uploading: false, progress: 0 },
     project2_thumbnail: { uploading: false, progress: 0 }
   });
 
@@ -103,6 +110,7 @@ export default function EditProfile({ session }) {
 
   const predefinedSkills = getAllSkills();
 
+  // Effects
   useEffect(() => {
     if (session?.user) {
       setUser(session.user);
@@ -112,7 +120,6 @@ export default function EditProfile({ session }) {
     }
   }, [session]);
 
-  // Add effect to track unsaved changes
   useEffect(() => {
     if (initialProfile && profile) {
       const hasChanges = JSON.stringify(profile) !== JSON.stringify(initialProfile);
@@ -120,7 +127,6 @@ export default function EditProfile({ session }) {
     }
   }, [profile, initialProfile]);
 
-  // Add beforeunload event listener to warn about unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (hasUnsavedChanges) {
@@ -133,6 +139,51 @@ export default function EditProfile({ session }) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  // Auto-save every 30 seconds if there are unsaved changes
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      const autoSaveTimer = setTimeout(autoSaveProfile, 30000);
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [hasUnsavedChanges, profile]);
+
+  // Helper functions
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+    if (dateString instanceof Date) return dateString;
+    
+    if (typeof dateString === 'string') {
+      if (dateString.includes('T') || dateString.includes('-')) {
+        return new Date(dateString);
+      }
+      const monthYearRegex = /^(\w+)\s+(\d{4})$/;
+      const match = dateString.match(monthYearRegex);
+      if (match) {
+        const [, month, year] = match;
+        return new Date(`${month} 1, ${year}`);
+      }
+    }
+    
+    return null;
+  };
+
+  const formatDateForStorage = (date) => {
+    if (!date) return null;
+    return date.toISOString();
+  };
+
+  const generateSlug = (name) => {
+    if (!name) return null;
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
+      .substring(0, 50);
+  };
+
+  // Data fetching
   const fetchProfile = async (currentUser) => {
     if (!currentUser) return;
     
@@ -168,7 +219,7 @@ export default function EditProfile({ session }) {
           }];
         }
         
-        // ✅ Handle education
+        // Handle education
         let education = [];
         if (data.education && Array.isArray(data.education) && data.education.length > 0) {
           education = data.education.map(edu => ({
@@ -194,7 +245,7 @@ export default function EditProfile({ session }) {
         const parsedProfile = {
           ...data,
           experiences,
-          education // ✅ Add education
+          education
         };
         
         setProfile(parsedProfile);
@@ -204,7 +255,7 @@ export default function EditProfile({ session }) {
           setSelectedSkills(data.skills);
         }
       } else {
-        // Set initial profile with defaults
+        // Set default profile
         const defaultProfile = {
           ...profile,
           experiences: [{
@@ -241,17 +292,31 @@ export default function EditProfile({ session }) {
     }
   };
 
+  // Input handling
   const handleInputChange = (field, value) => {
     setProfile(prev => ({
       ...prev,
       [field]: value
     }));
-    
-    // Mark as having unsaved changes
     setHasUnsavedChanges(true);
   };
 
-  // Add auto-save functionality (optional)
+  // Tab switching
+  const handleTabSwitch = (newTab) => {
+    if (hasUnsavedChanges) {
+      const confirmSwitch = window.confirm(
+        'You have unsaved changes. Do you want to switch tabs? Your changes will be auto-saved.'
+      );
+      if (confirmSwitch) {
+        autoSaveProfile();
+        setActiveTab(newTab);
+      }
+    } else {
+      setActiveTab(newTab);
+    }
+  };
+
+  // Save functions
   const autoSaveProfile = async () => {
     if (!user || !hasUnsavedChanges) return;
     
@@ -270,7 +335,6 @@ export default function EditProfile({ session }) {
           start_date: formatDateForStorage(exp.start_date),
           end_date: formatDateForStorage(exp.end_date)
         })),
-        // ✅ Add education
         education: profile.education.map(edu => ({
           ...edu,
           start_date: formatDateForStorage(edu.start_date),
@@ -292,14 +356,48 @@ export default function EditProfile({ session }) {
     }
   };
 
-  // Auto-save every 30 seconds if there are unsaved changes
-  useEffect(() => {
-    if (hasUnsavedChanges) {
-      const autoSaveTimer = setTimeout(autoSaveProfile, 30000);
-      return () => clearTimeout(autoSaveTimer);
-    }
-  }, [hasUnsavedChanges, profile]);
+  const saveProfile = async () => {
+    if (!user) return;
+    try {
+      const slug = generateSlug(profile.name);
+      
+      const profileData = {
+        ...profile,
+        skills: selectedSkills,
+        id: user.id,
+        email: user.email,
+        slug: slug,
+        updated_at: new Date().toISOString(),
+        experiences: profile.experiences.map(exp => ({
+          ...exp,
+          start_date: formatDateForStorage(exp.start_date),
+          end_date: formatDateForStorage(exp.end_date)
+        })),
+        education: profile.education.map(edu => ({
+          ...edu,
+          start_date: formatDateForStorage(edu.start_date),
+          end_date: formatDateForStorage(edu.end_date)
+        }))
+      };
 
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(profileData, { onConflict: 'id' });
+
+      if (error) throw error;
+      
+      setInitialProfile(JSON.parse(JSON.stringify(profile)));
+      setHasUnsavedChanges(false);
+      
+      alert('Profile saved successfully!');
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setError(`Failed to save profile: ${error.message}`);
+    }
+  };
+
+  // Upload functions
   const updateUploadState = (field, updates) => {
     setUploadStates(prev => ({
       ...prev,
@@ -307,7 +405,7 @@ export default function EditProfile({ session }) {
     }));
   };
 
-  const handleFileUpload = async (file, bucketName, field) => {
+  const handleFileUpload = async (file, bucketName, projectNumber, field) => {
     if (!file || !user) return;
 
     const uploadKey = field.replace('_url', '');
@@ -346,81 +444,15 @@ export default function EditProfile({ session }) {
     }
   };
 
- /* const handleFolderUpload = async (files, bucketName, field) => {
-    if (!files || files.length === 0 || !user) return;
-
-    const uploadKey = field.replace('_url', '');
-    const fileList = Array.from(files);
-    
-    updateUploadState(uploadKey, { 
-      uploading: true, 
-      progress: 0, 
-      files: fileList.map(f => ({ name: f.name, status: 'pending' }))
-    });
-
-    const folderName = `${user.id}/${Date.now()}_folder`;
-    let completedFiles = 0;
-
-    try {
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        const fileName = `${folderName}/${file.webkitRelativePath || file.name}`;
-        
-        // Update current file status
-        updateUploadState(uploadKey, { 
-          files: uploadStates[uploadKey].files.map((f, index) => 
-            index === i ? { ...f, status: 'uploading' } : f
-          )
-        });
-
-        const { error } = await supabase.storage
-          .from(bucketName)
-          .upload(fileName, file);
-
-        if (error) throw error;
-
-        // Update file status to completed
-        completedFiles++;
-        const progress = (completedFiles / fileList.length) * 100;
-        
-        updateUploadState(uploadKey, { 
-          progress,
-          files: uploadStates[uploadKey].files.map((f, index) => 
-            index === i ? { ...f, status: 'completed' } : f
-          )
-        });
-      }
-
-      // Set folder URL (you might want to store the folder path instead)
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(folderName);
-
-      handleInputChange(field, urlData.publicUrl);
-      updateUploadState(uploadKey, { uploading: false, progress: 100 });
-
-      setTimeout(() => {
-        updateUploadState(uploadKey, { progress: 0, files: [] });
-      }, 3000);
-
-    } catch (error) {
-      console.error('Error uploading folder:', error);
-      updateUploadState(uploadKey, { uploading: false, progress: 0, files: [] });
-      alert('Error uploading folder. Please try again.');
-    }
-  };
-*/
-
   const handleFolderUpload = async (e, field = 'project1_folder_url') => {
     const files = Array.from(e.target.files);
     const projectFolder = `project-${Date.now()}`;
 
-    let rootFolder = ''; // we'll detect this from the first file
+    let rootFolder = '';
 
     for (const file of files) {
       const relativePath = file.webkitRelativePath || file.name;
 
-      // Get root folder only once (before first /)
       if (!rootFolder) {
         const parts = relativePath.split('/');
         if (parts.length > 1) {
@@ -446,279 +478,60 @@ export default function EditProfile({ session }) {
       }
     }
 
-    // ✅ Use root folder name to point to correct index.html path
     const liveUrl = `http://localhost:5000/uploads/${projectFolder}/${rootFolder}`;
-    //handleInputChange('project1_folder_url', liveUrl);
     handleInputChange(field, liveUrl);
   };
-  
-  
-  // Skills handling functions
-  const handleSkillsInputChange = (e) => {
-    const value = e.target.value;
-    setSkillsInput(value);
+
+  // Experience functions
+  const addExperience = () => {
+    const newExperience = {
+      id: Date.now(),
+      title: '',
+      company: '',
+      location: '',
+      description: '',
+      start_date: null,
+      end_date: null,
+      current: false
+    };
     
-    if (value.trim() === '') {
-      setShowSkillsDropdown(false);
-      setFilteredSkills([]);
+    setProfile(prev => ({
+      ...prev,
+      experiences: [...prev.experiences, newExperience]
+    }));
+    
+    setHasUnsavedChanges(true);
+  };
+
+  const removeExperience = (experienceId) => {
+    if (profile.experiences.length <= 1) {
+      alert("You must have at least one experience entry.");
       return;
     }
-
-    // Filter skills based on input
-    const filtered = predefinedSkills.filter(skill => 
-      skill.toLowerCase().includes(value.toLowerCase()) && 
-      !selectedSkills.includes(skill)
-    );
     
-    setFilteredSkills(filtered);
-    setShowSkillsDropdown(filtered.length > 0);
-  };
-
-  const handleSkillSelect = (skill) => {
-    if (!selectedSkills.includes(skill)) {
-      const newSkills = [...selectedSkills, skill];
-      setSelectedSkills(newSkills);
-      handleInputChange('skills', newSkills);
-    }
-    setSkillsInput('');
-    setShowSkillsDropdown(false);
-    setFilteredSkills([]);
-  };
-
-  const handleSkillRemove = (skillToRemove) => {
-    const newSkills = selectedSkills.filter(skill => skill !== skillToRemove);
-    setSelectedSkills(newSkills);
-    handleInputChange('skills', newSkills);
-  };
-
-  const handleSkillsInputKeyDown = (e) => {
-    if (e.key === 'Enter' && skillsInput.trim()) {
-      e.preventDefault();
-      const trimmedSkill = skillsInput.trim();
-      
-      // Check if it's an exact match from filtered skills
-      const exactMatch = filteredSkills.find(skill => 
-        skill.toLowerCase() === trimmedSkill.toLowerCase()
-      );
-      
-      if (exactMatch) {
-        handleSkillSelect(exactMatch);
-      } else if (!selectedSkills.includes(trimmedSkill)) {
-        // Add custom skill if it doesn't exist
-        const newSkills = [...selectedSkills, trimmedSkill];
-        setSelectedSkills(newSkills);
-        handleInputChange('skills', newSkills);
-        setSkillsInput('');
-        setShowSkillsDropdown(false);
-      }
-    } else if (e.key === 'Escape') {
-      setShowSkillsDropdown(false);
+    const confirmDelete = window.confirm("Are you sure you want to remove this experience?");
+    if (confirmDelete) {
+      setProfile(prev => ({
+        ...prev,
+        experiences: prev.experiences.filter(exp => exp.id !== experienceId)
+      }));
+      setHasUnsavedChanges(true);
     }
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (skillsInputRef.current && !skillsInputRef.current.contains(event.target)) {
-        setShowSkillsDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Helper function to parse date strings to Date objects
-  const parseDate = (dateString) => {
-    if (!dateString) return null;
-    if (dateString instanceof Date) return dateString;
-    
-    // Handle different date formats
-    if (typeof dateString === 'string') {
-      // If it's already in ISO format
-      if (dateString.includes('T') || dateString.includes('-')) {
-        return new Date(dateString);
-      }
-      // If it's in "Month Year" format
-      const monthYearRegex = /^(\w+)\s+(\d{4})$/;
-      const match = dateString.match(monthYearRegex);
-      if (match) {
-        const [, month, year] = match;
-        return new Date(`${month} 1, ${year}`);
-      }
-    }
-    
-    return null;
+  const updateExperience = (experienceId, field, value) => {
+    setProfile(prev => ({
+      ...prev,
+      experiences: prev.experiences.map(exp => 
+        exp.id === experienceId 
+          ? { ...exp, [field]: value }
+          : exp
+      )
+    }));
+    setHasUnsavedChanges(true);
   };
 
-  // Helper function to format date for display and storage
-  const formatDateForStorage = (date) => {
-    if (!date) return null;
-    return date.toISOString();
-  };
-
-  const formatDateForDisplay = (date) => {
-    if (!date) return '';
-    return date.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
-  };
-
-  // Update the saveProfile function to handle date formatting
-  const saveProfile = async () => {
-    if (!user) return;
-    try {
-      const slug = generateSlug(profile.name);
-      
-      const profileData = {
-        ...profile,
-        skills: selectedSkills,
-        id: user.id,
-        email: user.email,
-        slug: slug,
-        updated_at: new Date().toISOString(),
-        // Format dates for storage
-        experiences: profile.experiences.map(exp => ({
-          ...exp,
-          start_date: formatDateForStorage(exp.start_date),
-          end_date: formatDateForStorage(exp.end_date)
-        })),
-        // ✅ Add education with formatted dates
-        education: profile.education.map(edu => ({
-          ...edu,
-          start_date: formatDateForStorage(edu.start_date),
-          end_date: formatDateForStorage(edu.end_date)
-        }))
-      };
-
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(profileData, { onConflict: 'id' });
-
-      if (error) throw error;
-      
-      setInitialProfile(JSON.parse(JSON.stringify(profile)));
-      setHasUnsavedChanges(false);
-      
-      alert('Profile saved successfully!');
-      navigate('/profile');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      setError(`Failed to save profile: ${error.message}`);
-    }
-  };
-
-  // Enhanced tab switching with unsaved changes warning
-  const handleTabSwitch = (newTab) => {
-    if (hasUnsavedChanges) {
-      const confirmSwitch = window.confirm(
-        'You have unsaved changes. Do you want to switch tabs? Your changes will be auto-saved.'
-      );
-      if (confirmSwitch) {
-        autoSaveProfile(); // Auto-save before switching
-        setActiveTab(newTab);
-      }
-    } else {
-      setActiveTab(newTab);
-    }
-  };
-
-  // Upload progress renderer
-  const renderUploadProgress = (uploadKey) => {
-    const state = uploadStates[uploadKey];
-    
-    if (!state.uploading && state.progress === 0) return null;
-
-    return (
-      <div className="px-3 sm:px-4 py-2">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs sm:text-sm font-medium text-[#0d0f1c]">
-            {state.uploading ? 'Uploading...' : 'Upload Complete'}
-          </span>
-          <span className="text-xs sm:text-sm text-[#47579e]">{Math.round(state.progress)}%</span>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="w-full bg-[#ced3e9] rounded-full h-2 mb-2">
-          <div 
-            className={`h-2 rounded-full transition-all duration-300 ${
-              state.progress === 100 ? 'bg-green-500' : 'bg-[#4264fa]'
-            }`}
-            style={{ width: `${state.progress}%` }}
-          />
-        </div>
-
-        {/* File List for Folder Uploads */}
-        {state.files && state.files.length > 0 && (
-          <div className="mt-3">
-            <p className="text-xs text-[#47579e] mb-2">Files ({state.files.length}):</p>
-            <div className="max-h-32 overflow-y-auto space-y-1">
-              {state.files.map((file, index) => (
-                <div key={index} className="flex items-center justify-between text-xs">
-                  <span className="text-[#0d0f1c] truncate flex-1 mr-2">{file.name}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    file.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    file.status === 'uploading' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {file.status === 'completed' ? '✓' : 
-                     file.status === 'uploading' ? '⟳' : '○'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {state.progress === 100 && !state.uploading && (
-          <div className="flex items-center gap-2 mt-2">
-            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-xs sm:text-sm text-green-600 font-medium">Upload successful!</span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Custom DatePicker component with styling
-  const CustomDatePicker = ({ 
-    selected, 
-    onChange, 
-    placeholderText, 
-    disabled = false,
-    maxDate = null,
-    minDate = null
-  }) => (
-    <div className="relative">
-      <DatePicker
-        selected={selected}
-        onChange={onChange}
-        dateFormat="MMMM yyyy"
-        showMonthYearPicker
-        placeholderText={placeholderText}
-        maxDate={maxDate}
-        minDate={minDate}
-        disabled={disabled}
-        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#4264fa] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal cursor-pointer"
-        wrapperClassName="w-full"
-        calendarClassName="custom-datepicker"
-        popperClassName="custom-datepicker-popper"
-      />
-      <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-[#47579e]">
-        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      </div>
-    </div>
-  );
-
-  // Add these functions after your experience functions:
-
-  // Add new education
+  // Education functions
   const addEducation = () => {
     const newEducation = {
       id: Date.now(),
@@ -741,7 +554,6 @@ export default function EditProfile({ session }) {
     setHasUnsavedChanges(true);
   };
 
-  // Remove education
   const removeEducation = (educationId) => {
     if (profile.education.length <= 1) {
       alert("You must have at least one education entry.");
@@ -758,7 +570,6 @@ export default function EditProfile({ session }) {
     }
   };
 
-  // Update specific education field
   const updateEducation = (educationId, field, value) => {
     setProfile(prev => ({
       ...prev,
@@ -771,70 +582,7 @@ export default function EditProfile({ session }) {
     setHasUnsavedChanges(true);
   };
 
-  // Add new experience
-  const addExperience = () => {
-    const newExperience = {
-      id: Date.now(),
-      title: '',
-      company: '',
-      location: '',
-      description: '',
-      start_date: null,
-      end_date: null,
-      current: false
-    };
-    
-    setProfile(prev => ({
-      ...prev,
-      experiences: [...prev.experiences, newExperience]
-    }));
-    
-    setHasUnsavedChanges(true);
-  };
-
-  // Remove experience
-  const removeExperience = (experienceId) => {
-    if (profile.experiences.length <= 1) {
-      alert("You must have at least one experience entry.");
-      return;
-    }
-    
-    const confirmDelete = window.confirm("Are you sure you want to remove this experience?");
-    if (confirmDelete) {
-      setProfile(prev => ({
-        ...prev,
-        experiences: prev.experiences.filter(exp => exp.id !== experienceId)
-      }));
-      setHasUnsavedChanges(true);
-    }
-  };
-
-  // Update specific experience field
-  const updateExperience = (experienceId, field, value) => {
-    setProfile(prev => ({
-      ...prev,
-      experiences: prev.experiences.map(exp => 
-        exp.id === experienceId 
-          ? { ...exp, [field]: value }
-          : exp
-      )
-    }));
-    setHasUnsavedChanges(true);
-  };
-
-  // Add this helper function at the top of your component:
-
-  const generateSlug = (name) => {
-    if (!name) return null;
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single
-      .trim()
-      .substring(0, 50); // Limit length
-  };
-
+  // Loading and error states
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center px-4">
@@ -857,1019 +605,75 @@ export default function EditProfile({ session }) {
         <div className="px-4 sm:px-6 md:px-8 lg:px-16 xl:px-40 flex flex-1 justify-center py-4 sm:py-5">
           <div className="layout-content-container flex flex-col max-w-[480px] sm:max-w-[600px] md:max-w-[720px] lg:max-w-[960px] flex-1 w-full">
             
-            {/* Unsaved Changes Indicator */}
-            {hasUnsavedChanges && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <span className="text-yellow-800 text-sm">You have unsaved changes. They will be auto-saved in 30 seconds.</span>
-              </div>
-            )}
+            <UnsavedChangesIndicator hasUnsavedChanges={hasUnsavedChanges} />
+            
+            <EditProfileHeader 
+              profile={profile} 
+              hasUnsavedChanges={hasUnsavedChanges} 
+              onSave={saveProfile} 
+            />
 
-            {/* Profile Header */}
-            <div className="flex p-3 sm:p-4">
-              <div className="flex w-full flex-col gap-3 sm:gap-4 items-center">
-                <div className="flex gap-3 sm:gap-4 flex-col items-center">
-                  <div
-                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full min-h-24 w-24 sm:min-h-28 sm:w-28 md:min-h-32 md:w-32"
-                    style={{backgroundImage: `url("${profile.profile_photo_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBENKwH5nxkytSSvv9toA494x-gAePUj0MlHpaEoRNu-6u_LkhO7frHlxdTZtB-RDN91ClkxwhxLCKSuc0DGiCASQpdsKUgErw98KJxZHMVWhaHKyUmskZzRk-OShdv-uHb4okA-_yrwS2qshQDp7iJrQusoYRbd87JF-01zdeKwzKDuG-aMbLYrNWjXcqAFxq-ACDXoNhoavNiJVXs8dtDM3AureQYuWelAgCJK7Xr3zlcda9WrJs8pQ_DsJVwNdF79VTIjG2XhbE'}")`}}
-                  />
-                  <div className="flex flex-col items-center justify-center px-2">
-                    <p className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">
-                      {profile.name || 'Your Name'}
-                    </p>
-                    <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal text-center">
-                      {profile.title || 'Your Title'}
-                    </p>
-                    <p className="text-[#47579e] text-sm sm:text-base font-normal leading-normal text-center">
-                      {profile.location || 'Your Location'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={saveProfile}
-                  className={`flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] w-full max-w-[320px] sm:max-w-[480px] ${
-                    hasUnsavedChanges 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                  }`}
-                >
-                  <span className="truncate">
-                    {hasUnsavedChanges ? 'Save Changes' : 'Save Profile'}
-                  </span>
-                </button>
-              </div>
-            </div>
+            <ProfilePhotoUpload 
+              profile={profile}
+              uploadStates={uploadStates}
+              onFileUpload={(file) => handleFileUpload(file, 'profile-photos', null, 'profile_photo_url')}
+            />
 
-            {/* Profile Photo Upload */}
-            <div className="flex flex-col p-3 sm:p-4">
-              <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                <div className="flex max-w-[480px] flex-col items-center gap-2">
-                  <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Profile Photo</p>
-                  <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a JPG or PNG image</p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileUpload(e.target.files[0], 'profile-photos', 'profile_photo_url')}
-                  className="hidden"
-                  id="profile-photo"
-                  disabled={uploadStates.profile_photo.uploading}
-                />
-                <label
-                  htmlFor="profile-photo"
-                  className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                    uploadStates.profile_photo.uploading 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                  }`}
-                >
-                  <span className="truncate">
-                    {uploadStates.profile_photo.uploading ? 'Uploading...' : 'Add Image'}
-                  </span>
-                </label>
-              </div>
-              {renderUploadProgress('profile_photo')}
-            </div>
+            <BasicInfoForm 
+              profile={profile} 
+              onInputChange={handleInputChange} 
+            />
 
-            {/* Basic Info Fields */}
-            <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Name</p>
-                <input
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                  value={profile.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter your name"
-                />
-              </label>
-            </div>
+            <EditProfileTabs 
+              activeTab={activeTab} 
+              onTabSwitch={handleTabSwitch} 
+            />
 
-            <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Title</p>
-                <input
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                  value={profile.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="e.g., Instructional Designer"
-                />
-              </label>
-            </div>
-
-            <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
-                <input
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                  value={profile.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  placeholder="e.g., New York, NY"
-                />
-              </label>
-            </div>
-
-            {/* Tab Navigation - Updated with enhanced tab switching */}
-            <div className="pb-3">
-              <div className="flex border-b border-[#ced3e9] px-3 sm:px-4 gap-4 sm:gap-6 md:gap-8 overflow-x-auto scrollbar-hide">
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleTabSwitch('about');
-                  }}
-                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
-                    activeTab === 'about' 
-                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                  }`}
-                >
-                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">About Me</p>
-                </a>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleTabSwitch('projects');
-                  }}
-                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
-                    activeTab === 'projects' 
-                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                  }`}
-                >
-                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Projects</p>
-                </a>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleTabSwitch('skills');
-                  }}
-                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
-                    activeTab === 'skills' 
-                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                  }`}
-                >
-                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Skills</p>
-                </a>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleTabSwitch('experience');
-                  }}
-                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
-                    activeTab === 'experience' 
-                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                  }`}
-                >
-                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Experience</p>
-                </a>
-                {/* Add this after the experience tab */}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleTabSwitch('education');
-                  }}
-                  className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 px-2 sm:px-3 transition-colors duration-200 whitespace-nowrap ${
-                    activeTab === 'education' 
-                    ? 'border-b-[#4264fa] text-[#0d0f1c]' 
-                    : 'border-b-transparent text-[#47579e] hover:text-[#0d0f1c]'
-                  }`}
-                >
-                  <p className="text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">Education</p>
-                </a>
-              </div>
-            </div>
-
-            {/* Tab Content - All existing content remains the same */}
+            {/* Tab Content */}
             {activeTab === 'about' && (
-              <>
-                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">About Me</h2>
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Edit About Me</p>
-                    <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.about_me}
-                      onChange={(e) => handleInputChange('about_me', e.target.value)}
-                      placeholder="Tell us more about yourself, your background, and what drives you in instructional design..."
-                    />
-                  </label>
-                </div>
-              </>
+              <AboutSection 
+                profile={profile} 
+                onInputChange={handleInputChange} 
+              />
             )}
 
             {activeTab === 'projects' && (
-              <>
-                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">Projects</h2>
-                
-                {/* Project 1 */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 1 Title</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.project1_title}
-                      onChange={(e) => handleInputChange('project1_title', e.target.value)}
-                      placeholder="Enter project title"
-                    />
-                  </label>
-                </div>
-
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 1 Description</p>
-                    <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.project1_description}
-                      onChange={(e) => handleInputChange('project1_description', e.target.value)}
-                      placeholder="Describe your project..."
-                    />
-                  </label>
-                </div>
-
-                {/* Project 1 Type Selection - Updated */}
-                <div className="flex flex-wrap gap-2 sm:gap-3 p-3 sm:p-4">
-                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
-                    profile.project1_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
-                  } text-[#0d0f1c]`}>
-                    📄 Storyboard (PDF)
-                    <input
-                      type="radio"
-                      className="invisible absolute"
-                      name="project1_type"
-                      checked={profile.project1_type === 'Storyboard'}
-                      onChange={() => {
-                        handleInputChange('project1_type', 'Storyboard');
-                        // Clear the opposite field when type changes
-                        handleInputChange('project1_folder_url', '');//////////
-                      }}
-                    />
-                  </label>
-                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
-                    profile.project1_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
-                  } text-[#0d0f1c]`}>
-                    💻 e-Learning (Folder)
-                    <input
-                      type="radio"
-                      className="invisible absolute"
-                      name="project1_type"
-                      checked={profile.project1_type === 'e-Learning'}
-                      onChange={() => {
-                        handleInputChange('project1_type', 'e-Learning');
-                        // Clear the opposite field when type changes
-                        handleInputChange('project1_pdf_url', '');
-                      }}
-                    />
-                  </label>
-                </div>
-
-                {/* Conditional Upload Section for Project 1 */}
-                {profile.project1_type === 'e-Learning' && (
-                  <div className="flex flex-col p-3 sm:p-4">
-                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                      <div className="flex max-w-[480px] flex-col items-center gap-2">
-                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload e-Learning Project Folder</p>
-                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select the entire project folder containing HTML, CSS, JS files</p>
-                      </div>
-                      <input
-                        type="file"
-                        webkitdirectory="true"
-						directory=""
-						multiple
-                        //onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project1_folder_url')}//////18
-						onChange={e => handleFolderUpload(e, 'project1_folder_url')} //////////////
-						disabled={uploadStates.project1_folder.uploading}
-                        className="hidden"
-                        id="project1-folder"
-                        //disabled={uploadStates.project1_folder.uploading}
-						ref={el => (window.project1FolderInput = el)} // Add a ref for programmatic click
-                      />
-                     <button
-                    type="button"
-                    onClick={() => window.project1FolderInput && window.project1FolderInput.click()}
-                    className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${uploadStates.project1_folder.uploading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                      }`}
-                    disabled={uploadStates.project1_folder.uploading}
-                  >
-                      
-                        <span className="truncate">
-                          {uploadStates.project1_folder.uploading ? 'Uploading...' : '📁 Add e-Learning Folder'}
-                        </span>
-                  
-					  </button>
-                    </div>
-                    {renderUploadProgress('project1_folder')}
-                  </div>
-                )}
-
-                {profile.project1_type === 'Storyboard' && (
-                  <div className="flex flex-col p-3 sm:p-4">
-                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                      <div className="flex max-w-[480px] flex-col items-center gap-2">
-                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Storyboard PDF</p>
-                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select a PDF file containing your storyboard</p>
-                      </div>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => handleFileUpload(e.target.files[0], 'project-pdfs', 'project1_pdf_url')}
-                        className="hidden"
-                        id="project1-pdf"
-                        disabled={uploadStates.project1_pdf?.uploading}
-                      />
-                      <label
-                        htmlFor="project1-pdf"
-                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                          uploadStates.project1_pdf?.uploading 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                        }`}
-                      >
-                        <span className="truncate">
-                          {uploadStates.project1_pdf?.uploading ? 'Uploading...' : '📄 Add PDF Storyboard'}
-                        </span>
-                      </label>
-                    </div>
-                    {renderUploadProgress('project1_pdf')}
-                  </div>
-                )}
-
-                {/* Project 1 Thumbnail Upload - Always show */}
-                <div className="flex flex-col p-3 sm:p-4">
-                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                    <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Thumbnail</p>
-                      <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a JPG or PNG image</p>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e.target.files[0], 'project-thumbnails', 'project1_thumbnail_url')}
-                      className="hidden"
-                      id="project1-thumbnail"
-                      disabled={uploadStates.project1_thumbnail.uploading}
-                    />
-                    <label
-                      htmlFor="project1-thumbnail"
-                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                        uploadStates.project1_thumbnail.uploading 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                      }`}
-                    >
-                      <span className="truncate">
-                        {uploadStates.project1_thumbnail.uploading ? 'Uploading...' : '🖼️ Add Thumbnail'}
-                      </span>
-                    </label>
-                  </div>
-                  {renderUploadProgress('project1_thumbnail')}
-                </div>
-
-                {/* Project 1 Thumbnail Preview */}
-                {profile.project1_thumbnail_url && (
-                  <div className="flex w-full grow bg-[#f8f9fc] p-3 sm:p-4">
-                    <div className="w-full gap-1 overflow-hidden bg-[#f8f9fc] aspect-[3/2] rounded-xl flex">
-                      <div
-                        className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
-                        style={{backgroundImage: `url("${profile.project1_thumbnail_url}")`}}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* File Preview Section for Project 1 */}
-                {(profile.project1_pdf_url || profile.project1_folder_url) && (
-                  <div className="p-3 sm:p-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-green-800 font-medium">File uploaded successfully!</span>
-                      </div>
-                      <p className="text-green-700 text-sm">
-                        {profile.project1_type === 'Storyboard' ? '📄 PDF Storyboard' : '📁 e-Learning Project Folder'} uploaded
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Project 2 - Same structure as Project 1 */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 2 Title</p>
-                    <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.project2_title}
-                      onChange={(e) => handleInputChange('project2_title', e.target.value)}
-                      placeholder="Enter project title"
-                    />
-                  </label>
-                </div>
-
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Project 2 Description</p>
-                    <textarea
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-32 sm:min-h-36 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={profile.project2_description}
-                      onChange={(e) => handleInputChange('project2_description', e.target.value)}
-                      placeholder="Describe your project..."
-                    />
-                  </label>
-                </div>
-
-                {/* Project 2 Type Selection */}
-                <div className="flex flex-wrap gap-2 sm:gap-3 p-3 sm:p-4">
-                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
-                    profile.project2_type === 'Storyboard' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
-                  } text-[#0d0f1c]`}>
-                    📄 Storyboard (PDF)
-                    <input
-                      type="radio"
-                      className="invisible absolute"
-                      name="project2_type"
-                      checked={profile.project2_type === 'Storyboard'}
-                      onChange={() => {
-                        handleInputChange('project2_type', 'Storyboard');
-                        handleInputChange('project2_folder_url', '');
-                      }}
-                    />
-                  </label>
-                  <label className={`text-xs sm:text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-3 sm:px-4 h-10 sm:h-11 relative cursor-pointer ${
-                    profile.project2_type === 'e-Learning' ? 'border-[3px] border-[#4264fa] px-2.5 sm:px-3.5' : 'border border-[#ced3e9]'
-                  } text-[#0d0f1c]`}>
-                    💻 e-Learning (Folder)
-                    <input
-                      type="radio"
-                      className="invisible absolute"
-                      name="project2_type"
-                      checked={profile.project2_type === 'e-Learning'}
-                      onChange={() => {
-                        handleInputChange('project2_type', 'e-Learning');
-                        handleInputChange('project2_pdf_url', '');
-                      }}
-                    />
-                  </label>
-                </div>
-
-                {/* Conditional Upload Section for Project 2 */}
-                {profile.project2_type === 'e-Learning' && (
-                  <div className="flex flex-col p-3 sm:p-4">
-                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                      <div className="flex max-w-[480px] flex-col items-center gap-2">
-                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload e-Learning Project Folder</p>
-                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select the entire project folder containing HTML, CSS, JS files</p>
-                      </div>
-                      <input
-                        type="file"
-                        webkitdirectory="true"
-						directory=""
-                        multiple
-                        //onChange={(e) => handleFolderUpload(e.target.files, 'project-folders', 'project2_folder_url')}
-						onChange={e => handleFolderUpload(e, 'project2_folder_url')}
-						disabled={uploadStates.project2_folder.uploading}
-                        className="hidden"
-                        id="project2-folder"
-                        //disabled={uploadStates.project2_folder.uploading}
-						ref={el => (window.project2FolderInput = el)}
-                      />
-                    
-					    <button
-                    type="button"
-                    onClick={() => window.project2FolderInput && window.project2FolderInput.click()}
-                    className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${uploadStates.project2_folder.uploading
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                      }`}
-                    disabled={uploadStates.project2_folder.uploading}
-                  >
-                    <span className="truncate">
-                      {uploadStates.project2_folder.uploading ? 'Uploading...' : 'Add Folder'}
-                    </span>
-                  </button>
-                    </div>
-                    {renderUploadProgress('project2_folder')}
-                  </div>
-                )}
-
-                {profile.project2_type === 'Storyboard' && (
-                  <div className="flex flex-col p-3 sm:p-4">
-                    <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                      <div className="flex max-w-[480px] flex-col items-center gap-2">
-                        <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Storyboard PDF</p>
-                        <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Select a PDF file containing your storyboard</p>
-                      </div>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => handleFileUpload(e.target.files[0], 'project-pdfs', 'project2_pdf_url')}
-                        className="hidden"
-                        id="project2-pdf"
-                        disabled={uploadStates.project2_pdf?.uploading}
-                      />
-                      <label
-                        htmlFor="project2-pdf"
-                        className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                          uploadStates.project2_pdf?.uploading 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                            : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                        }`}
-                      >
-                        <span className="truncate">
-                          {uploadStates.project2_pdf?.uploading ? 'Uploading...' : '📄 Add PDF Storyboard'}
-                        </span>
-                      </label>
-                    </div>
-                    {renderUploadProgress('project2_pdf')}
-                  </div>
-                )}
-
-                {/* Project 2 Thumbnail Upload */}
-                <div className="flex flex-col p-3 sm:p-4">
-                  <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#ced3e9] px-4 sm:px-6 py-10 sm:py-14">
-                    <div className="flex max-w-[480px] flex-col items-center gap-2">
-                      <p className="text-[#0d0f1c] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em] text-center">Upload Thumbnail</p>
-                      <p className="text-[#0d0f1c] text-sm font-normal leading-normal text-center">Click to select a JPG or PNG image</p>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e.target.files[0], 'project-thumbnails', 'project2_thumbnail_url')}
-                      className="hidden"
-                      id="project2-thumbnail"
-                      disabled={uploadStates.project2_thumbnail.uploading}
-                    />
-                    <label
-                      htmlFor="project2-thumbnail"
-                      className={`flex min-w-[84px] max-w-[320px] sm:max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base font-bold leading-normal tracking-[0.015em] ${
-                        uploadStates.project2_thumbnail.uploading 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-[#e6e9f4] text-[#0d0f1c] hover:bg-[#d1d6ed]'
-                      }`}
-                    >
-                      <span className="truncate">
-                        {uploadStates.project2_thumbnail.uploading ? 'Uploading...' : '🖼️ Add Thumbnail'}
-                      </span>
-                    </label>
-                  </div>
-                  {renderUploadProgress('project2_thumbnail')}
-                </div>
-
-                {/* Project 2 Thumbnail Preview */}
-                {profile.project2_thumbnail_url && (
-                  <div className="flex w-full grow bg-[#f8f9fc] p-3 sm:p-4">
-                    <div className="w-full gap-1 overflow-hidden bg-[#f8f9fc] aspect-[3/2] rounded-xl flex">
-                      <div
-                        className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
-                        style={{backgroundImage: `url("${profile.project2_thumbnail_url}")`}}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* File Preview Section for Project 2 */}
-                {(profile.project2_pdf_url || profile.project2_folder_url) && (
-                  <div className="p-3 sm:p-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-green-800 font-medium">File uploaded successfully!</span>
-                      </div>
-                      <p className="text-green-700 text-sm">
-                        {profile.project2_type === 'Storyboard' ? '📄 PDF Storyboard' : '📁 e-Learning Project Folder'} uploaded
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
+              <ProjectsSection 
+                profile={profile}
+                uploadStates={uploadStates}
+                onInputChange={handleInputChange}
+                onFileUpload={handleFileUpload}
+                onFolderUpload={handleFolderUpload}
+              />
             )}
 
             {activeTab === 'skills' && (
-              <>
-                <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 pb-3 pt-5">Skills</h2>
-                
-                {/* Skills Input with Dropdown */}
-                <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 px-3 sm:px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1 relative" ref={skillsInputRef}>
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Add Skills</p>
-                    <input
-                      type="text"
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                      value={skillsInput}
-                      onChange={handleSkillsInputChange}
-                      onKeyDown={handleSkillsInputKeyDown}
-                      placeholder="Type to search skills (e.g., React, Python, AWS, Machine Learning...)"
-                      autoComplete="off"
-                    />
-                    
-                    {/* Enhanced Dropdown */}
-                    {showSkillsDropdown && (
-                      <div className="absolute top-full left-0 right-0 bg-white border border-[#ced3e9] rounded-xl shadow-lg max-h-64 overflow-y-auto z-10 mt-1">
-                        {filteredSkills.slice(0, 20).map((skill, index) => (
-                          <div
-                            key={index}
-                            className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-[#f8f9fc] cursor-pointer text-xs sm:text-sm text-[#0d0f1c] border-b border-[#ced3e9] last:border-b-0 flex items-center justify-between"
-                            onClick={() => handleSkillSelect(skill)}
-                          >
-                            <span>{skill}</span>
-                            <span className="text-xs text-[#47579e] opacity-60">Click to add</span>
-                          </div>
-                        ))}
-                        {filteredSkills.length > 20 && (
-                          <div className="px-3 sm:px-4 py-2 text-xs text-[#47579e] italic bg-[#f8f9fc]">
-                            {filteredSkills.length - 20} more results... Keep typing to narrow down
-                          </div>
-                        )}
-                        {filteredSkills.length === 0 && skillsInput.trim() && (
-                          <div className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-[#47579e] italic">
-                            Press Enter to add "{skillsInput.trim()}" as a custom skill
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </label>
-                </div>
-
-                {/* Selected Skills Display */}
-                {selectedSkills.length > 0 && (
-                  <div className="px-3 sm:px-4 py-3">
-                    <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-3">Selected Skills ({selectedSkills.length})</p>
-                    <div className="flex gap-2 flex-wrap max-h-48 overflow-y-auto">
-                      {selectedSkills.map((skill, index) => (
-                        <div 
-                          key={index} 
-                          className="flex items-center justify-center gap-x-2 rounded-full bg-[#e6e9f4] pl-3 sm:pl-4 pr-2 py-1.5 sm:py-2 group hover:bg-[#d1d6ed] transition-colors"
-                        >
-                          <p className="text-[#0d0f1c] text-xs sm:text-sm font-medium leading-normal">{skill}</p>
-                          <button
-                            onClick={() => handleSkillRemove(skill)}
-                            className="ml-1 text-[#47579e] hover:text-[#0d0f1c] focus:outline-none p-1 rounded-full hover:bg-[#ced3e9] transition-colors"
-                            aria-label={`Remove ${skill}`}
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Categorized Popular Skills */}
-                <div className="px-3 sm:px-4 py-3">
-                  <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-3">Popular Skills by Category</p>
-                  {Object.entries(skillsData.popularSkills).map(([category, skills]) => (
-                    <div key={category} className="mb-4">
-                      <h4 className="text-[#47579e] text-xs sm:text-sm font-medium mb-2">{category}</h4>
-                      <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                        {skills.filter(skill => !selectedSkills.includes(skill)).map((skill, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleSkillSelect(skill)}
-                            className="flex items-center justify-center rounded-full border border-[#ced3e9] bg-white hover:bg-[#f8f9fc] hover:border-[#4264fa] px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-200"
-                          >
-                            <span className="text-[#47579e] text-xs font-medium leading-normal">+ {skill}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Skills Help Text */}
-                <div className="px-3 sm:px-4 py-2">
-                  <p className="text-[#47579e] text-sm leading-normal">
-                    💡 <strong>Pro tip:</strong> Start typing to search from our database of {predefinedSkills.length}+ skills including programming languages, 
-                    frameworks, cloud platforms, databases, and more. You can also add custom skills by pressing Enter.
-                  </p>
-                </div>
-              </>
+              <SkillsSection 
+                profile={profile}
+                selectedSkills={selectedSkills}
+                setSelectedSkills={setSelectedSkills}
+                onInputChange={handleInputChange}
+                skillsData={skillsData} // Change this line - pass the full object instead of predefinedSkills
+                predefinedSkills={predefinedSkills}
+              />
             )}
 
             {activeTab === 'experience' && (
-              <>
-                <div className="flex items-center justify-between px-3 sm:px-4 pb-3 pt-5">
-                  <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em]">
-                    Experience
-                  </h2>
-                  <button
-                    onClick={addExperience}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#4264fa] text-white rounded-lg hover:bg-[#3651e8] transition-colors text-sm font-medium"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Experience
-                  </button>
-                </div>
-                
-                {/* Dynamic Experience List */}
-                <div className="space-y-6">
-                  {profile.experiences.map((experience, index) => (
-                    <div key={experience.id} className="border border-[#ced3e9] rounded-xl p-4 bg-white relative">
-                      
-                      {/* Experience Header with Remove Button */}
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-[#0d0f1c] text-base font-bold">
-
-
-                          Experience {index + 1}
-                        </h3>
-                        {profile.experiences.length > 1 && (
-                          <button
-                            onClick={() => removeExperience(experience.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                            title="Remove this experience"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Experience Title */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Job Title</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={experience.title}
-                            onChange={(e) => updateExperience(experience.id, 'title', e.target.value)}
-                            placeholder="e.g., Senior Instructional Designer"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Company */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Company/Organization</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={experience.company}
-                            onChange={(e) => updateExperience(experience.id, 'company', e.target.value)}
-                            placeholder="e.g., ABC Corp, XYZ University"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Location */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={experience.location}
-                            onChange={(e) => updateExperience(experience.id, 'location', e.target.value)}
-                            placeholder="e.g., New York, NY"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Description */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">About this Role</p>
-                          <textarea
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={experience.description}
-                            onChange={(e) => updateExperience(experience.id, 'description', e.target.value)}
-                            placeholder="Describe your responsibilities, achievements, and key projects in this role..."
-                          />
-                        </label>
-                      </div>
-
-                      {/* Dates */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
-                          <CustomDatePicker
-                            selected={experience.start_date}
-                            onChange={(date) => updateExperience(experience.id, 'start_date', date)}
-                            placeholderText="Start Date"
-                            maxDate={experience.end_date || new Date()}
-                          />
-                        </label>
-                        {!experience.current && (
-                          <label className="flex flex-col min-w-40 flex-1">
-                            <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
-                            <CustomDatePicker
-                              selected={experience.end_date}
-                              onChange={(date) => updateExperience(experience.id, 'end_date', date)}
-                              placeholderText="End Date"
-                              minDate={experience.start_date}
-                              maxDate={new Date()}
-                            />
-                          </label>
-                        )}
-                      </div>
-
-                      {/* Currently Working Checkbox */}
-                      <div className="max-w-[480px] pb-3">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={experience.current || false}
-                            onChange={(e) => {
-                              updateExperience(experience.id, 'current', e.target.checked);
-                              if (e.target.checked) {
-                                updateExperience(experience.id, 'end_date', null);
-                              }
-                            }}
-                            className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
-                            style={{
-                              backgroundColor: experience.current ? '#4264fa' : '#fff',
-                              borderColor: experience.current ? '#4264fa' : '#ced3e9'
-                            }}
-                          />
-                          <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently working here</span>
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+              <ExperienceSection 
+                profile={profile}
+                onAddExperience={addExperience}
+                onRemoveExperience={removeExperience}
+                onUpdateExperience={updateExperience}
+              />
             )}
 
-            {/* Add this after the experience tab content */}
             {activeTab === 'education' && (
-              <>
-                <div className="flex items-center justify-between px-3 sm:px-4 pb-3 pt-5">
-                  <h2 className="text-[#0d0f1c] text-lg sm:text-xl md:text-[22px] font-bold leading-tight tracking-[-0.015em]">
-                    Education
-                  </h2>
-                  <button
-                    onClick={addEducation}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#4264fa] text-white rounded-lg hover:bg-[#3651e8] transition-colors text-sm font-medium"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Education
-                  </button>
-                </div>
-                
-                {/* Dynamic Education List */}
-                <div className="space-y-6">
-                  {profile.education.map((education, index) => (
-                    <div key={education.id} className="border border-[#ced3e9] rounded-xl p-4 bg-white relative">
-                      
-                      {/* Education Header with Remove Button */}
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-[#0d0f1c] text-base font-bold">
-                          Education {index + 1}
-                        </h3>
-                        {profile.education.length > 1 && (
-                          <button
-                            onClick={() => removeEducation(education.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                            title="Remove this education"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Degree */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Degree</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={education.degree}
-                            onChange={(e) => updateEducation(education.id, 'degree', e.target.value)}
-                            placeholder="e.g., Bachelor of Science, Master of Arts, PhD"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Institution */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Institution</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={education.institution}
-                            onChange={(e) => updateEducation(education.id, 'institution', e.target.value)}
-                            placeholder="e.g., Harvard University, MIT, Stanford"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Field of Study */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Field of Study</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={education.field_of_study}
-                            onChange={(e) => updateEducation(education.id, 'field_of_study', e.target.value)}
-                            placeholder="e.g., Computer Science, Education, Psychology"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Location and GPA */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Location</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={education.location}
-                            onChange={(e) => updateEducation(education.id, 'location', e.target.value)}
-                            placeholder="e.g., Cambridge, MA"
-                          />
-                        </label>
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">GPA (optional)</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] h-12 sm:h-14 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={education.gpa}
-                            onChange={(e) => updateEducation(education.id, 'gpa', e.target.value)}
-                            placeholder="e.g., 3.8/4.0, 8.5/10"
-                          />
-                        </label>
-                      </div>
-
-                      {/* Description */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Description (optional)</p>
-                          <textarea
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d0f1c] focus:outline-0 focus:ring-0 border border-[#ced3e9] bg-[#f8f9fc] focus:border-[#ced3e9] min-h-24 sm:min-h-28 placeholder:text-[#47579e] p-3 sm:p-[15px] text-sm sm:text-base font-normal leading-normal"
-                            value={education.description}
-                            onChange={(e) => updateEducation(education.id, 'description', e.target.value)}
-                            placeholder="Relevant coursework, achievements, honors, thesis topic, etc..."
-                          />
-                        </label>
-                      </div>
-
-                      {/* Dates */}
-                      <div className="flex max-w-full flex-wrap items-end gap-3 sm:gap-4 py-3">
-                        <label className="flex flex-col min-w-40 flex-1">
-                          <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">Start Date</p>
-                          <CustomDatePicker
-                            selected={education.start_date}
-                            onChange={(date) => updateEducation(education.id, 'start_date', date)}
-                            placeholderText="Start Date"
-                            maxDate={education.end_date || new Date()}
-                          />
-                        </label>
-                        {!education.current && (
-                          <label className="flex flex-col min-w-40 flex-1">
-                            <p className="text-[#0d0f1c] text-sm sm:text-base font-medium leading-normal pb-2">End Date</p>
-                            <CustomDatePicker
-                              selected={education.end_date}
-                              onChange={(date) => updateEducation(education.id, 'end_date', date)}
-                              placeholderText="End Date"
-                              minDate={education.start_date}
-                              maxDate={new Date()}
-                            />
-                          </label>
-                        )}
-                      </div>
-
-                      {/* Currently Studying Checkbox */}
-                      <div className="max-w-[480px] pb-3">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={education.current || false}
-                            onChange={(e) => {
-                              updateEducation(education.id, 'current', e.target.checked);
-                              if (e.target.checked) {
-                                updateEducation(education.id, 'end_date', null);
-                              }
-                            }}
-                            className="w-4 h-4 bg-white border-2 border-[#ced3e9] rounded appearance-none checked:bg-[#4264fa] checked:border-[#4264fa] transition-all duration-200 relative"
-                            style={{
-                              backgroundColor: education.current ? '#4264fa' : '#fff',
-                              borderColor: education.current ? '#4264fa' : '#ced3e9'
-                            }}
-                          />
-                          <span className="text-[#47579e] text-sm sm:text-base font-medium">Currently studying here</span>
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+              <EducationSection 
+                profile={profile}
+                onAddEducation={addEducation}
+                onRemoveEducation={removeEducation}
+                onUpdateEducation={updateEducation}
+              />
             )}
           </div>
         </div>
